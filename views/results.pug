@@ -1,0 +1,25 @@
+extends layout
+
+block content
+    h1 #{title}
+    ul
+        each telephone, i in telephones
+            li
+                div
+                    span= telephone.vyrobce + " " + telephone.model
+                    br
+                    span= "konstrukce: " + telephone.konstrukce
+                    br
+                    span= "operační systém: " + telephone.os
+                    br
+                    span= "paměť RAM: " + telephone.ram
+                    br
+                    span= "rozlišení: " + telephone.rozliseni_displeje
+                    br
+                    span= "fotoaparát: " + telephone.fotoaparat_mpix
+                    br
+                    span= "uživatelská paměť: " + telephone.uzivatelska_pamet
+
+    a(class='button' href= url+"&page="+prevPage) Previous
+    br
+    a(class='button' href=url+"&page="+nextPage) Next

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Databáze telefonů</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>Vyhledat</h1>
+    <form method="GET" action="/search-fulltext-results">
+        <label for="searchString">Fulltext search:</label><br>
+        <input type="text" id="searchString" name="searchString" value="Apple"><br>
+        <input class="btn btn-primary" type="submit" value="Search">
+    </form>
+    <form method="GET" action="/search-results">
+        <span>počet výsledků: </span>
+        <span id="spanCount">0</span>
+        <h3>Vyrobce</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="Apple" type="checkbox" name="vyrobce" />
+                <label>Apple</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Honor" type="checkbox" name="vyrobce" />
+                <label>Honor</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Huawei" type="checkbox" name="vyrobce" />
+                <label>Huawei</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Xiaomi" type="checkbox" name="vyrobce" />
+                <label>Xiaomi</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Nokia" type="checkbox" name="vyrobce" />
+                <label>Nokia</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Sony" type="checkbox" name="vyrobce" />
+                <label>Sony</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="LG" type="checkbox" name="vyrobce" />
+                <label>LG</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Motorola" type="checkbox" name="vyrobce" />
+                <label>Motorola</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="HTC" type="checkbox" name="vyrobce" />
+                <label>HTC</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Lenovo" type="checkbox" name="vyrobce" />
+                <label>Lenovo</label>
+                <span class="count"></span>
+            </div>
+        </div>
+        <h3>Konstrukce</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="dotykovy" type="checkbox" name="konstrukce">
+                <label>Dotykovy</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="klasicky s klavesnici" type="checkbox" name="konstrukce">
+                <label>Klasicky s klavesnici</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="vecko" type="checkbox" name="konstrukce">
+                <label>Vecko</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="vysuvny" type="checkbox" name="konstrukce">
+                <label>Vysuvny</label>
+                <span class="count"></span>
+            </div>
+        </div>
+        <h3>OS</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="Android" type="checkbox" name="OS">
+                <label>Android</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="iOS" type="checkbox" name="OS">
+                <label>iOS</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="Windows" type="checkbox" name="OS">
+                <label>Windows</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="bez OS" type="checkbox" name="OS">
+                <label>bez OS</label>
+                <span class="count"></span>
+            </div>
+        </div>
+        <h3>Memory</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="8" type="checkbox" name="uzivatelska_pamet">
+                <label>8</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="16" type="checkbox" name="uzivatelska_pamet">
+                <label>16</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="32" type="checkbox" name="uzivatelska_pamet">
+                <label>32</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="64" type="checkbox" name="uzivatelska_pamet">
+                <label>64</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="128" type="checkbox" name="uzivatelska_pamet">
+                <label>128</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="512" type="checkbox" name="uzivatelska_pamet">
+                <label>512</label>
+                <span class="count"></span>
+            </div>
+        </div>
+        <h3>Fotoaparát (rozlišení)</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="8" type="checkbox" name="fotoaparat_mpix">
+                <label>8</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="13" type="checkbox" name="fotoaparat_mpix">
+                <label>13</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="14.9" type="checkbox" name="fotoaparat_mpix">
+                <label>14.9</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="48" type="checkbox" name="fotoaparat_mpix">
+                <label>48</label>
+                <span class="count"></span>
+            </div>
+        </div>
+        <h3>Bluetooth</h3>
+        <div id="form-group">
+            <div class="form-checkbox">
+                <input class="form-control" value="1" type="checkbox" name="bluetooth">
+                <label>Ano</label>
+                <span class="count"></span>
+            </div>
+            <div class="form-checkbox">
+                <input class="form-control" value="0" type="checkbox" name="bluetooth">
+                <label>Ne</label>
+                <span class="count"></span>
+            </div>
+            <input class="btn btn-primary" type="submit" value="Search">
+        </div>
+    </form>
+    <script>
+
+        //initialize session storage for filter
+        $(document).ready(function () {
+            var emptyArray = [];
+            sessionStorage.setItem("vyrobce", JSON.stringify(emptyArray));
+            sessionStorage.setItem("konstrukce", JSON.stringify(emptyArray));
+            sessionStorage.setItem("OS", JSON.stringify(emptyArray));
+            sessionStorage.setItem("uzivatelska_pamet", JSON.stringify(emptyArray));
+            sessionStorage.setItem("fotoaparat_mpix", JSON.stringify(emptyArray));
+            sessionStorage.setItem("bluetooth", JSON.stringify(emptyArray));
+        });
+
+        var checkboxes = document.getElementsByClassName('form-control');
+
+        [].forEach.call(checkboxes, function (checkboxes) {
+            checkboxes.addEventListener("click", function (e) {
+
+                updateFilter(e.toElement.name, e.toElement.value);
+
+                //AJAX call here
+
+                //create XHR Object
+
+                var params = makeParams();
+
+
+                sendAJAXrequest(params, document.getElementById("spanCount")).then(() => {
+                    recalculateCounts();
+                });
+
+            });
+        });
+
+        function sendAJAXrequest(params, element, substract = false) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest();
+
+                xhr.open('GET', '/count' + "?" + params, true);
+
+                //onload
+                xhr.onload = function () {
+                    //HTTP Status OK
+                    if (xhr.status == 200) {
+
+                        var text = this.responseText.replace('[', '');
+                        text = text.replace(']', '');
+
+                        if (substract) {
+                            console.log("var count = " + Number(text) + " - " + Number(document.getElementById("spanCount").innerHTML));
+                            var count = Number(text) - Number(document.getElementById("spanCount").innerHTML);
+                            if (count < 0) element.innerHTML = `(${count})`;
+                            else element.innerHTML = `(+${count})`;
+                        } else {
+                            element.innerHTML = text;
+                        }
+
+                        //console.log(this.responseText);
+                        resolve();
+                    } else {
+                        reject("Error XHR");
+                    }
+                }
+
+                //send request
+                xhr.send();
+            });
+
+        }
+
+        function makeParams() {
+
+            var params = "";
+
+            var arrays = {};
+            arrays.vyrobce = (JSON.parse(sessionStorage.getItem("vyrobce")));
+            arrays.konstrukce = (JSON.parse(sessionStorage.getItem("konstrukce")));
+            arrays.OS = (JSON.parse(sessionStorage.getItem("OS")));
+            arrays.uzivatelska_pamet = (JSON.parse(sessionStorage.getItem("uzivatelska_pamet")));
+            arrays.fotoaparat_mpix = (JSON.parse(sessionStorage.getItem("fotoaparat_mpix")));
+            arrays.bluetooth = (JSON.parse(sessionStorage.getItem("bluetooth")));
+
+            Object.keys(arrays).forEach(key => {
+                //console.log(key);        // the name of the current key. vyrobce
+                //console.log(myObj[key]); // the value of the current key. [nn, bnb, ef]
+
+                for (var i = 0; i < arrays[key].length; i++) {
+                    params += "&" + key + "=" + arrays[key][i];
+                }
+            });
+
+            return params;
+
+        }
+
+        function updateFilter(name, value) {
+
+            var storedItem = JSON.parse(sessionStorage.getItem(name));
+
+            if (storedItem !== null && storedItem !== 'undefined' && storedItem.length > 0) {
+                // this filter group exists in SS
+                if (storedItem.indexOf(value) !== -1) {
+                    // user unchecked the checkbox -> remove the value
+                    var newArray = storedItem.filter(arrayItem => arrayItem !== value);
+                    sessionStorage.setItem(name, JSON.stringify(newArray));
+                } else {
+                    // user checked the checkbox -> add the value
+                    storedItem.push(value);
+                    sessionStorage.setItem(name, JSON.stringify(storedItem));
+                }
+            } else {
+                // this filter group does not exist in SS yet
+                storedItem = [];
+                storedItem.push(value);
+                sessionStorage.setItem(name, JSON.stringify(storedItem));
+            }
+
+            //TODO: After a filter is updated, recalculate all
+
+        }
+
+        function recalculateCounts() {
+
+            var params = makeParams();
+
+            var divs = document.getElementsByClassName('form-checkbox');
+
+            //loop through all divs
+            [].forEach.call(divs, function (div) {
+
+                var newParams = params;
+
+
+                //make this async?
+
+                //get value of child checkbox in this div
+                const children = Array.from(div.children);
+
+                var checkbox;
+                var span;
+
+                children.map(item => { // loop over his children using .map() --> see MDN for more
+                    if (item.classList.contains('form-control')) { // we place a test where we determine our choice
+                        checkbox = item; // your code here
+                    } else if (item.classList.contains('count')) {
+                        span = item;
+                    }
+                });
+
+                var currentFilter = JSON.parse(sessionStorage.getItem(checkbox.name));
+
+                //span.innerHTML = checkbox.value;
+
+                //TODO: check if checkbox was found
+
+                //check if value of checkbox is present in currentFilter.
+                if (currentFilter !== null && currentFilter !== 'undefined' && currentFilter.length > 0 && currentFilter.indexOf(checkbox.value) !== -1) {
+                    // the checkbox is checked. We need to count UNCHECKED value
+                    newParams = newParams.replace("&" + checkbox.name + "=" + checkbox.value, '');
+                } else {
+                    // the checkbox is not checked
+                    newParams += "&" + checkbox.name + "=" + checkbox.value;
+                }
+
+                //if it is, make AJAX call WITHOUT this value in filter.
+
+                //if it is not, make AJAX call WITH this value in filter.
+                //console.log("recalculate params: " + newParams);
+                sendAJAXrequest(newParams, span, true);
+
+                //set value of child span to the count (e.g. (+1209));
+
+            });
+        }
+
+    </script>
+    </div>
+
+    <hr>
+    <footer>
+        <p>Pavla Polová 2019</p>
+    </footer>
+</body>
+
+</html>

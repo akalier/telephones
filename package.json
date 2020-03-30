@@ -1,0 +1,28 @@
+{
+  "name": "redis-phones",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "startest": "node connector.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-handlebars": "^3.1.0",
+    "method-override": "^3.0.0",
+    "mongodb": "^3.5.2",
+    "mysql": "^2.18.0",
+    "node-fetch": "^2.6.0",
+    "pug": "^2.0.4",
+    "redis": "^2.8.0",
+    "redis-cli": "^1.4.0",
+    "redis-server": "^1.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4"
+  }
+}
