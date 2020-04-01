@@ -25,7 +25,7 @@ function createQuery(parameters, sql, page = 1) {
     //no parameters
     if (Object.entries(parameters).length === 0) {
         sql = sql.substring(0, sql.length - 7);
-        sql += ` LIMIT ${((page-1)*ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
+        sql += ` LIMIT ${((page - 1) * ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
 
         //console.log("mysqlQueryProcessor (generated query without params): " + sql);
         return sql;
@@ -80,8 +80,8 @@ function createQuery(parameters, sql, page = 1) {
 
     //limit
 
-    sql += ` LIMIT ${((page-1)*ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
-    
+    sql += ` LIMIT ${((page - 1) * ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
+
     //console.log("mysqlQueryProcessor (generated query): " + sql);
     return sql;
 }
@@ -102,13 +102,20 @@ function query(parameters, res, url) {
     let id = createID(parameters, page);
     logQuery(id);
 
-    //first, try to get data from redis
-    client.get(id, function (err, data) {
-        if (err) {
-            //error
-            throw err;
-        }
+    let cachePromise = new Promise(function (resolve, reject) {
+        //first, try to get data from cache
+        client.get(id, function (err, data) {
+            if (err) {
+                //error
+                reject("Redis error");
+                throw err;
+            }
 
+            resolve(data);
+        });
+    });
+
+    cachePromise.then((data) => {
         if (data !== null && data !== 'undefined') {
             console.log("mysqlQueryProcessor: Data found in redis!");
 
@@ -117,7 +124,7 @@ function query(parameters, res, url) {
             //console.log("mysqlQueryProcessor (redis data): " + data);
 
             if (page > 1) {
-                prevPage = page-1;
+                prevPage = page - 1;
             } else {
                 prevPage = page;
             }
@@ -125,13 +132,13 @@ function query(parameters, res, url) {
             res.render('results', {
                 title: "Výsledky vyhledávání",
                 telephones: JSON.parse(data),
-                nextPage: page+1,
+                nextPage: page + 1,
                 prevPage: prevPage,
                 url: url
             });
             return;
         } else {
-            console.log("mysqlQueryProcessor: Data NOT found in redis.");
+            console.log("mysqlQueryProcessor: Data NOT found in cache.");
 
             //get mysql connection
             pool.getConnection(function (err, con) {
@@ -149,10 +156,10 @@ function query(parameters, res, url) {
 
                     //console.log("mysqlQueryProcessor (mysql data): " + result);
 
-                    setDataToRedis(id, result);
+                    setDataToCache(id, result);
 
                     if (page > 1) {
-                        prevPage = page-1;
+                        prevPage = page - 1;
                     } else {
                         prevPage = page;
                     }
@@ -160,7 +167,7 @@ function query(parameters, res, url) {
                     res.render('results', {
                         title: "Výsledky vyhledávání",
                         telephones: result,
-                        nextPage: page+1,
+                        nextPage: page + 1,
                         prevPage: prevPage,
                         url: url
                     });
@@ -169,8 +176,8 @@ function query(parameters, res, url) {
                 });
             })
         };
-
     });
+
 
 }
 
@@ -191,51 +198,65 @@ function queryCount(parameters, res, url, explain = false) {
     id = id + "$count";
     //logQuery(id);
 
-    //first, try to get data from redis
-    client.get(id, function (err, data) {
-        if (err) {
-            //error
-            //console.log("mysqlQueryProcessor: redis error: " + err);
-            throw err;
-        }
+    let cachePromise = new Promise(function (resolve, reject) {
+        //first, try to get data from cache
+        client.get(id, function (err, data) {
+            if (err) {
+                //error
+                reject("Redis error");
+                throw err;
+            }
 
-        if (data !== null && data !== 'undefined') {
-            //console.log("mysqlQueryProcessor: Data found in redis!");
+            resolve(data);
+        });
+    });
 
-            //extendExpiration(id);
+    cachePromise.then((data) => {
+        client.get(id, function (err, data) {
+            if (err) {
+                //error
+                //console.log("mysqlQueryProcessor: redis error: " + err);
+                throw err;
+            }
 
-            //console.log("mysqlQueryProcessor (redis data): " + data);
+            if (data !== null && data !== 'undefined') {
+                //console.log("mysqlQueryProcessor: Data found in redis!");
 
-            res.send([JSON.parse(data)]);
-            return;
-        } else {
-            //console.log("mysqlQueryProcessor: Data NOT found in redis.");
-            //get mysql connection
-            pool.getConnection(function (err, con) {
+                //extendExpiration(id);
 
-                //console.log("mysqlQueryProcessor: connection established.");
+                //console.log("mysqlQueryProcessor (redis data): " + data);
 
-                if (err) {
-                    console.log("mysqlQueryProcessor: " + err);
-                    throw err;
-                }
+                res.send([JSON.parse(data)]);
+                return;
+            } else {
+                //console.log("mysqlQueryProcessor: Data NOT found in cache.");
+                //get mysql connection
+                pool.getConnection(function (err, con) {
 
-                con.query(sql, function (err, result, fields) {
+                    //console.log("mysqlQueryProcessor: connection established.");
+
                     if (err) {
                         console.log("mysqlQueryProcessor: " + err);
                         throw err;
                     }
-                    //console.log("mysqlQueryProcessor: Data found in DB.");
-                    //console.log("mysqlQueryProcessor (mysql data): " + result[0].count);
 
-                    setDataCountToRedis(id, result[0].count);
-                    res.send([JSON.parse(result[0].count)]);
-                    con.release();
-                    return;
-                });
-            })
-        };
+                    con.query(sql, function (err, result, fields) {
+                        if (err) {
+                            console.log("mysqlQueryProcessor: " + err);
+                            throw err;
+                        }
+                        //console.log("mysqlQueryProcessor: Data found in DB.");
+                        //console.log("mysqlQueryProcessor (mysql data): " + result[0].count);
 
+                        setDataCountToCache(id, result[0].count);
+                        res.send([JSON.parse(result[0].count)]);
+                        con.release();
+                        return;
+                    });
+                })
+            };
+
+        });
     });
 
 }
@@ -243,86 +264,101 @@ function queryCount(parameters, res, url, explain = false) {
 function queryFulltext(searchString, page, res, url) {
     //TODO: think of a better way
     let sql = `SELECT * FROM ${TABLE_NAME} WHERE vyrobce LIKE '%${searchString}%' OR konstrukce LIKE '%${searchString}%' OR OS LIKE '%${searchString}%' OR uzivatelska_pamet LIKE '%${searchString}%' OR fotoaparat_mpix LIKE '%${searchString}%' OR bluetooth LIKE '%${searchString}%'`;
-    sql += ` LIMIT ${((page-1)*ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
+    sql += ` LIMIT ${((page - 1) * ROWS_PER_PAGE)}, ${ROWS_PER_PAGE}`;
 
     let id = "fulltext$" + searchString;
     logQuery(id);
 
-    client.get(id, function (err, data) {
-        if (err) {
-            //error
-            throw err;
-        }
-
-        if (data !== null && data !== 'undefined') {
-            console.log("mysqlQueryProcessor: Data found in redis!");
-
-            //extendExpiration(id);
-
-            //console.log("mysqlQueryProcessor (redis data): " + data);
-
-            if (page > 1) {
-                prevPage = page-1;
-            } else {
-                prevPage = page;
+    let cachePromise = new Promise(function (resolve, reject) {
+        //first, try to get data from cache
+        client.get(id, function (err, data) {
+            if (err) {
+                //error
+                reject("Redis error");
+                throw err;
             }
 
-            res.render('results', {
-                title: "Výsledky vyhledávání",
-                telephones: JSON.parse(data),
-                nextPage: page+1,
-                prevPage: prevPage,
-                url: url
-            });
-            return;
-        } else {
-            console.log("mysqlQueryProcessor: Data NOT found in redis.");
+            resolve(data);
+        });
+    });
 
-            //get mysql connection
-            pool.getConnection(function (err, con) {
-                if (err) {
-                    console.log("mysqlQueryProcessor: " + err);
-                    throw err;
+    cachePromise.then((data) => {
+        client.get(id, function (err, data) {
+            if (err) {
+                //error
+                throw err;
+            }
+
+            if (data !== null && data !== 'undefined') {
+                console.log("mysqlQueryProcessor: Data found in redis!");
+
+                //extendExpiration(id);
+
+                //console.log("mysqlQueryProcessor (redis data): " + data);
+
+                if (page > 1) {
+                    prevPage = page - 1;
+                } else {
+                    prevPage = page;
                 }
 
-                con.query(sql, function (err, result, fields) {
+                res.render('results', {
+                    title: "Výsledky vyhledávání",
+                    telephones: JSON.parse(data),
+                    nextPage: page + 1,
+                    prevPage: prevPage,
+                    url: url
+                });
+                return;
+            } else {
+                console.log("mysqlQueryProcessor: Data NOT found in cache.");
+
+                //get mysql connection
+                pool.getConnection(function (err, con) {
                     if (err) {
+                        console.log("mysqlQueryProcessor: " + err);
                         throw err;
                     }
-                    //console.log("mysqlQueryProcessor: Data found in DB.");
-                    //console.log(result);
 
-                    //console.log("mysqlQueryProcessor (mysql data): " + result);
+                    con.query(sql, function (err, result, fields) {
+                        if (err) {
+                            throw err;
+                        }
+                        //console.log("mysqlQueryProcessor: Data found in DB.");
+                        //console.log(result);
 
-                    setDataToRedis(id, result);
+                        //console.log("mysqlQueryProcessor (mysql data): " + result);
 
-                    if (page > 1) {
-                        prevPage = page-1;
-                    } else {
-                        prevPage = page;
-                    }
+                        setDataToCache(id, result);
 
-                    res.render('results', {
-                        title: "Výsledky vyhledávání",
-                        telephones: result,
-                        nextPage: page+1,
-                        prevPage: prevPage,
-                        url: url
+                        if (page > 1) {
+                            prevPage = page - 1;
+                        } else {
+                            prevPage = page;
+                        }
+
+                        res.render('results', {
+                            title: "Výsledky vyhledávání",
+                            telephones: result,
+                            nextPage: page + 1,
+                            prevPage: prevPage,
+                            url: url
+                        });
+                        con.release();
+                        return;
                     });
-                    con.release();
-                    return;
-                });
-            })
-        };
+                })
+            };
 
+        });
     });
 }
 
-function setDataToRedis(id, data) {
+function setDataToCache(id, data) {
 
     client.setex(id, DATA_EXPIRATION, JSON.stringify(data));
-    console.log("mysqlQueryProcessor: Data set to redis.");
-    //console.log("mysqlQueryProcessor: Data set to redis: " + JSON.stringify(data));
+    console.log("mysqlQueryProcessor: Data set to cache.");
+    //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
 }
 
 function logQuery(hash) {
@@ -343,11 +379,11 @@ function logQuery(hash) {
 
 }
 
-function setDataCountToRedis(id, data) {
+function setDataCountToCache(id, data) {
 
     id = id + "$count";
     client.setex(id, DATA_EXPIRATION, data);
-    //console.log("mysqlQueryProcessor: Data count set to redis: " + data);
+    //console.log("mysqlQueryProcessor: Data count set to cache: " + data);
 }
 
 function extendExpiration(id) {
@@ -391,7 +427,7 @@ function createID(data, page = 1) {
     if (page) {
         id += "$$$page:" + page;
     }
-    
+
     //console.log("mysqlQueryProcessor: generated id: " + id);
     return id;
 }
