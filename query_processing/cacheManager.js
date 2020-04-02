@@ -11,7 +11,7 @@ memcached.connect('localhost:11211', function (err, conn) {
 });
 
 const REDIS_PORT = 6379;
-const client = redis.createClient(REDIS_PORT);
+const redisClient = redis.createClient(REDIS_PORT);
 
 function setDataToCache(id, data) {
     if (configVariables.cache == "redis") {
@@ -37,9 +37,17 @@ function searchInCache(id) {
     }
 }
 
+function flushCache() {
+    if (configVariables.cache == "redis") {
+        return flushRedis();
+    } else {
+        return flushMemcached();
+    }
+}
+
 function setDataToRedis(id, data) {
 
-    client.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
+    redisClient.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
     console.log("redis: Data set to cache.");
     //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
 }
@@ -54,7 +62,7 @@ function setDataToMemcached(id, data) {
 function setDataCountToRedis(id, data) {
 
     id = id + "$count";
-    client.setex(id, configVariables.DATA_EXPIRATION, data);
+    redisClient.setex(id, configVariables.DATA_EXPIRATION, data);
     //console.log("mysqlQueryProcessor: Data count set to cache: " + data);
 }
 
@@ -70,7 +78,7 @@ function searchInRedis(id) {
 
     return new Promise(function (resolve, reject) {
         //first, try to get data from cache
-        client.get(id, function (err, data) {
+        redisClient.get(id, function (err, data) {
             if (err) {
                 //error
                 reject("Redis error");
@@ -101,6 +109,20 @@ function searchInMemcached(id) {
 
 }
 
+function flushRedis() {
+
+    redisClient.flushdb( function (err, succeeded) {
+        console.log(succeeded); // will be true if successfull
+    });
+
+}
+
+function flushMemcached() {
+    
+    //to be implemented
+
+}
+
 /*let id = "15w18";
 let data = [{ a: 1, b: 3, c: "444" }]
 
@@ -109,6 +131,9 @@ searchInCache(id).then((data) => {
     console.log(data);
 });*/
 
+flushRedis();
+
 module.exports.setDataToCache = setDataToCache;
 module.exports.setDataCountToCache = setDataCountToCache;
 module.exports.searchInCache = searchInCache;
+module.exports.flushCache = flushCache;

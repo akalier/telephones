@@ -1,6 +1,8 @@
 var mysql = require('mysql');
 const configVariables = require('./config-variables.js');
 
+const cacheManager = require('./query_processing/cacheManager.js');
+
 const redis = require('redis');
 
 const REDIS_PORT = 6379;
@@ -72,7 +74,7 @@ function reparse(hash) {
                 reject(err);
             }
 
-            setDataToRedis(originalHash, result);
+            cacheManager.setDataToRedis(originalHash, result);
             //console.log(result);
             resolve(result);
         });
@@ -119,10 +121,4 @@ function makeNormalQuery(hash, page) {
     console.log(sql);
 
     return sql;
-}
-
-function setDataToRedis(id, data) {
-
-    client.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
-    //console.log("Data set to redis: " + JSON.stringify(data));
 }
