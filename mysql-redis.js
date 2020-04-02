@@ -2,6 +2,8 @@ var mysql = require('mysql');
 const config = require('./config.js');
 const configVariables = require('./config-variables.js');
 
+const cacheManager = require('./query_processing/cacheManager.js');
+
 const TABLE_NAME = 'telefon';
 const DATA_EXPIRATION = 3600;
 
@@ -10,7 +12,7 @@ const redis = require('redis');
 const REDIS_PORT = 6379;
 const client = redis.createClient(REDIS_PORT);
 
-var con = mysql.createConnection({
+var con = mysql.createPool({
     host: "localhost",
     user: "root",
     //TODO: change pwd
@@ -18,7 +20,7 @@ var con = mysql.createConnection({
     database: "projekt"
 });
 
-con.connect(function (err) {
+con.getConnection(function (err, connection) {
     if (err) {
         console.log(err);
         throw err;
@@ -32,17 +34,12 @@ con.connect(function (err) {
         console.log("Total time: " + (newTime - time) / 1000);
         console.log("Closing database...");
         //database.close();
-        con.release();
+        connection.release();
+    }).catch((err) => {
+        console.log(err);
     })
 
 });
-
-// save data by query id to redis
-function setDataToRedis(id, data) {
-
-    client.setex(id, DATA_EXPIRATION, JSON.stringify(data));
-    //console.log("Data set to redis: " + JSON.stringify(data));
-}
 
 function extendExpiration(id) {
 
@@ -103,9 +100,11 @@ function requestData(parameters) {
     let id = createID(parameters);
 
     return new Promise((resolve, reject) => {
-        if (configVariables.redis) {
+        if (configVariables.useCache) {
 
-            client.get(id, function (err, data) {
+            let cachePromise = cacheManager.searchInCache(id);
+
+            cachePromise.then((data) => {
                 if (err) {
                     reject(err);
                 }
@@ -126,7 +125,7 @@ function requestData(parameters) {
                         }
                         //console.log("Data found in DB.");
 
-                        setDataToRedis(id, result);
+                        cacheManager.setDataToCache(id, result);
                         //console.log(result);
                         resolve(result);
                     });
@@ -168,12 +167,11 @@ function requestDataCount(parameters) {
     //console.log("generated id: " + id);
 
     return new Promise((resolve, reject) => {
-        if (configVariables.redis) {
+        if (configVariables.useCache) {
 
-            client.get(id, function (err, data) {
-                if (err) {
-                    reject(err);
-                }
+            let cachePromise = cacheManager.searchInCache(id);
+
+            cachePromise.then((data) => {
 
                 if (data !== null && data !== 'undefined') {
                     //console.log("Data found in redis!");
@@ -205,11 +203,13 @@ function requestDataCount(parameters) {
                         }
 
                         //console.log(vysledek);
-                        setDataToRedis(id, vysledek);
+                        cacheManager.setDataToCache(id, vysledek);
                         resolve(vysledek);
                     });
                 }
-            });
+
+            })
+
         } else {
 
             con.query(sql, function (err, result, fields) {
