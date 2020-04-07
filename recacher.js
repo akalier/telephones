@@ -53,7 +53,7 @@ function reparse(hash) {
 
     let page = 1;
     if (hash.includes("page")) {
-        let split = hash.split("$$$page:");
+        let split = hash.split(configVariables.PAGE_DELIMITER);
         page = parseInt(split[1]);
         hash = split[0];
     }
@@ -61,7 +61,7 @@ function reparse(hash) {
     let sql;
 
     if (hash.includes("fulltext")) {
-        let split = hash.split("fulltext$");
+        let split = hash.split(configVariables.FULLTEXT_DELIMITER);
         hash = split[1];
         sql = makeFulltextQuery(hash, page);
     } else {
@@ -95,7 +95,7 @@ function makeNormalQuery(hash, page) {
 
     let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE `;
 
-    let split = hash.split("$");
+    let split = hash.split(configVariables.DELIMITER);
 
     for (s of split) {
         let split2 = s.split(":");

@@ -4,17 +4,17 @@ const Memcached = require('memcached');
 const configVariables = require('../config-variables.js');
 
 var memcached = new Memcached();
-memcached.connect('localhost:11211', function (err, conn) {
+/*memcached.connect('localhost:11211', function (err, conn) {
     if (err) {
         console.log(conn.server, 'error while memcached connection!!');
     }
-});
+});*/
 
 const REDIS_PORT = 6379;
 const redisClient = redis.createClient(REDIS_PORT);
 
 function setDataToCache(id, data) {
-    if (configVariables.cache == "redis") {
+    if (configVariables.cache === "redis") {
         setDataToRedis(id, data);
     } else {
         setDataToMemcached(id, data);
@@ -22,7 +22,7 @@ function setDataToCache(id, data) {
 }
 
 function setDataCountToCache(id, data) {
-    if (configVariables.cache == "redis") {
+    if (configVariables.cache === "redis") {
         setDataCountToRedis(id, data);
     } else {
         setDataCountToMemcached(id, data);
@@ -30,7 +30,7 @@ function setDataCountToCache(id, data) {
 }
 
 function searchInCache(id) {
-    if (configVariables.cache == "redis") {
+    if (configVariables.cache === "redis") {
         return searchInRedis(id);
     } else {
         return searchInMemcached(id);
@@ -38,7 +38,7 @@ function searchInCache(id) {
 }
 
 function flushCache() {
-    if (configVariables.cache == "redis") {
+    if (configVariables.cache === "redis") {
         return flushRedis();
     } else {
         return flushMemcached();
@@ -48,27 +48,25 @@ function flushCache() {
 function setDataToRedis(id, data) {
 
     redisClient.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
-    console.log("redis: Data set to cache.");
+    //console.log("redis: Data set to cache.");
     //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
 }
 
 function setDataToMemcached(id, data) {
 
     memcached.set(id, JSON.stringify(data), configVariables.DATA_EXPIRATION);
-    console.log("memcached: Data set to cache.");
+    //console.log("memcached: Data set to cache.");
     //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
 }
 
 function setDataCountToRedis(id, data) {
 
-    id = id + "$count";
     redisClient.setex(id, configVariables.DATA_EXPIRATION, data);
-    //console.log("mysqlQueryProcessor: Data count set to cache: " + data);
+    //console.log("cacheManager: Data count set to redis: " + id + " --- " + data);
 }
 
 function setDataCountToMemcached(id, data) {
 
-    id = id + "$count";
     memcached.set(id, data, configVariables.DATA_EXPIRATION);
     console.log("memcached: Data set to cache.");
     //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
@@ -85,6 +83,7 @@ function searchInRedis(id) {
                 throw err;
             }
 
+            //console.log("cacheManager: Data found in cache: " + id + " --- " + data);
             resolve(data);
         });
     });
@@ -130,8 +129,6 @@ setDataToCache(id, data);
 searchInCache(id).then((data) => {
     console.log(data);
 });*/
-
-flushRedis();
 
 module.exports.setDataToCache = setDataToCache;
 module.exports.setDataCountToCache = setDataCountToCache;

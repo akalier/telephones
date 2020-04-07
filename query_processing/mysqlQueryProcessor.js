@@ -183,7 +183,7 @@ function queryCount(parameters, res, url) {
     sql = createQuery(parameters, sql);
 
     let id = createID(parameters);
-    id = id + "$count";
+    id = id + configVariables.COUNT_DELIMITER;
     //logQuery(id);
 
     let cachePromise = cacheManager.searchInCache(id);
@@ -232,11 +232,10 @@ function queryCount(parameters, res, url) {
 }
 
 function queryFulltext(searchString, page, res, url) {
-    //TODO: think of a better way
     let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE vyrobce LIKE '%${searchString}%' OR konstrukce LIKE '%${searchString}%' OR OS LIKE '%${searchString}%' OR uzivatelska_pamet LIKE '%${searchString}%' OR fotoaparat_mpix LIKE '%${searchString}%' OR bluetooth LIKE '%${searchString}%'`;
     sql += ` LIMIT ${((page - 1) * configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
 
-    let id = "fulltext$" + searchString;
+    let id = configVariables.FULLTEXT_DELIMITER + searchString;
     logQuery(id);
 
     let cachePromise = cacheManager.searchInCache(id);
@@ -334,7 +333,7 @@ function logQuery(hash) {
 
 function setDataCountToCache(id, data) {
 
-    id = id + "$count";
+    id = id + configVariables.COUNT_DELIMITER;
     client.setex(id, configVariables.DATA_EXPIRATION, data);
     //console.log("mysqlQueryProcessor: Data count set to cache: " + data);
 }
@@ -372,13 +371,13 @@ function createID(data, page = 1) {
         else {
             id += sortedData[property1];
         }*/
-        id += "$";
+        id += configVariables.DELIMITER;
     }
 
     id = id.substring(0, id.length - 1);
     id = id.replace('%,', '');
     if (page) {
-        id += "$$$page:" + page;
+        id += configVariables.PAGE_DELIMITER + page;
     }
 
     //console.log("mysqlQueryProcessor: generated id: " + id);

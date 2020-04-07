@@ -5,12 +5,9 @@ const configVariables = require('./config-variables.js');
 const redis = require('redis');
 const MongoClient = require('mongodb').MongoClient;
 
-const REDIS_PORT = 6379;
+const cacheManager = require('./query_processing/cacheManager.js');
 
-const DATA_EXPIRATION = 3600;
-const COLLECTION = 'telefon';
-
-const client = redis.createClient(REDIS_PORT);
+const client = redis.createClient(configVariables.REDIS_PORT);
 
 // Connect to the db
 MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
@@ -22,7 +19,8 @@ MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 
   var time = new Date();
 
-  //5000 mongo queries with 50% same - all data
+  cacheManager.flushCache();
+
   config.performQueries(db).then(() => {
     var newTime = new Date();
     console.log("Total time: " + (newTime - time) / 1000);
@@ -32,28 +30,9 @@ MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 
 });
 
-
-// save data count by query id to redis
-function setDataCountToRedis(id, response) {
-
-  client.setex(id, DATA_EXPIRATION, JSON.stringify(response));
-
-  //console.log("Data set to redis.");
-  //console.log("Data set to redis: " + response);
-}
-
-// save data by query id to redis
-function setDataToRedis(id, response) {
-
-  client.setex(id, DATA_EXPIRATION, JSON.stringify(response));
-
-  //console.log("Data set to redis.");
-  //console.log("Data set to redis: " + JSON.stringify(response));
-}
-
 function extendExpiration(id) {
 
-  client.expire(id, DATA_EXPIRATION);
+  client.expire(id, configVariables.DATA_EXPIRATION);
   console.log("Expiration extended.");
 
 }
@@ -70,12 +49,12 @@ function createID(data) {
     } else {
       id += sortedData[property1];
     }
-    id += "_";
+    id += configVariables.DELIMITER;
   }
 
   //remove the last underscore
   id = id.substring(0, id.length - 1);
-  id = id.replace(" ", "_");
+  id = id.replace(" ", configVariables.DELIMITER);
   return id;
 }
 
@@ -99,13 +78,10 @@ function requestData(db, parameters) {
 
     if (configVariables.redis) {
 
-      //get data from redis
-      client.get(id, function (err, data) {
+      let cachePromise = cacheManager.searchInCache(id);
 
-        if (err) {
-          //error
-          reject(err);
-        }
+      //get data from redis
+      cachePromise.then((data) => {
 
         if (data !== null && data !== 'undefined') {
           //data found in redis
@@ -120,22 +96,24 @@ function requestData(db, parameters) {
           //data not found in redis
           //console.log("Data NOT found in redis.");
           // the particular database query
-          db.collection(COLLECTION).find(parameters).toArray(function (err, result) {
+          db.collection(configVariables.TABLE_NAME).find(parameters).toArray(function (err, result) {
             //console.log("Requesting DB.");
             if (err) {
               //error
               reject(err);
             }
             //console.log("Data found in DB.");
-            setDataToRedis(id, result);
+            cacheManager.setDataToCache(id, result);
             //console.log(result);
             resolve(result);
           });
         }
+
       });
+
     } else {
 
-      db.collection(COLLECTION).find(parameters).toArray(function (err, result) {
+      db.collection(configVariables.TABLE_NAME).find(parameters).toArray(function (err, result) {
         if (err) reject(err);
         //console.log(result);
         resolve(result);
@@ -152,17 +130,16 @@ function requestDataCount(db, parameters) {
 
   let id = createID(parameters);
 
-  id = id + "_count";
+  id = id + configVariables.COUNT_DELIMITER;
   //console.log('created id: ' + id);
 
   return new Promise((resolve, reject) => {
 
-    if (configVariables.redis) {
+    if (configVariables.useCache) {
 
-      client.get(id, function (err, data) {
-        if (err) {
-          reject(err);
-        }
+      let cachePromise = cacheManager.searchInCache(id);
+
+      cachePromise.then((data) => {
 
         if (data !== null && data !== 'undefined') {
           //console.log("Data found in redis!");
@@ -175,13 +152,13 @@ function requestDataCount(db, parameters) {
         } else {
           //console.log("Data NOT found in redis.");
           // the particular query
-          db.collection(COLLECTION).find(parameters).count(function (err, result) {
+          db.collection(configVariables.TABLE_NAME).find(parameters).count(function (err, result) {
             //console.log("Requesting DB.");
             if (err) {
               reject(err);
             }
             //console.log("Data found in DB.");
-            setDataCountToRedis(id, result);
+            cacheManager.setDataCountToCache(id, result);
             //console.log(result);
             resolve(result);
           });
@@ -189,7 +166,7 @@ function requestDataCount(db, parameters) {
       });
     } else {
 
-      db.collection(COLLECTION).find(parameters).count(function (err, result) {
+      db.collection(configVariables.TABLE_NAME).find(parameters).count(function (err, result) {
         //console.log("Requesting DB.");
         if (err) {
           reject(err);

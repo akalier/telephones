@@ -4,13 +4,9 @@ const configVariables = require('./config-variables.js');
 
 const cacheManager = require('./query_processing/cacheManager.js');
 
-const TABLE_NAME = 'telefon';
-const DATA_EXPIRATION = 3600;
-
 const redis = require('redis');
 
-const REDIS_PORT = 6379;
-const client = redis.createClient(REDIS_PORT);
+const client = redis.createClient(configVariables.REDIS_PORT);
 
 var con = mysql.createPool({
     host: "localhost",
@@ -35,6 +31,7 @@ con.getConnection(function (err, connection) {
         console.log("Closing database...");
         //database.close();
         connection.release();
+        cacheManager.flushCache();
     }).catch((err) => {
         console.log(err);
     })
@@ -43,7 +40,7 @@ con.getConnection(function (err, connection) {
 
 function extendExpiration(id) {
 
-    client.expire(id, DATA_EXPIRATION);
+    client.expire(id, configVariables.DATA_EXPIRATION);
     console.log("Expiration extended.");
 
 }
@@ -53,7 +50,7 @@ function createID(data) {
     var sortedData = sortObj(data);
     var id = "";
     if (configVariables.explain) {
-        id += "EXPLAIN$";
+        id += configVariables.EXPLAIN_DELIMITER;
     }
 
     for (var property1 in sortedData) {
@@ -63,11 +60,11 @@ function createID(data) {
         } else {
             id += sortedData[property1];
         }
-        id += "$";
+        id += configVariables.DELIMITER;
     }
 
     id = id.substring(0, id.length - 1);
-    id = id.replace(" ", "$");
+    id = id.replace(" ", configVariables.DELIMITER);
     return id;
 }
 
@@ -93,7 +90,7 @@ function createQuery(parameters, sql) {
 // this function tries to get data from redis. If failed, loads them from DB.
 function requestData(parameters) {
 
-    let sql = "SELECT * FROM " + TABLE_NAME + " WHERE ";
+    let sql = "SELECT * FROM " + configVariables.TABLE_NAME + " WHERE ";
     sql = createQuery(parameters, sql);
     //console.log("generated sql: " + sql);
 
@@ -105,9 +102,6 @@ function requestData(parameters) {
             let cachePromise = cacheManager.searchInCache(id);
 
             cachePromise.then((data) => {
-                if (err) {
-                    reject(err);
-                }
 
                 if (data !== null && data !== 'undefined') {
                     //console.log("Data found in redis!");
@@ -154,16 +148,16 @@ function requestDataCount(parameters) {
 
     if (configVariables.explain) {
         //console.log("WARNING: using explain");
-        sql = "EXPLAIN SELECT * FROM " + TABLE_NAME + " WHERE ";
+        sql = "EXPLAIN SELECT * FROM " + configVariables.TABLE_NAME + " WHERE ";
     } else {
-        sql = "SELECT COUNT(*) as count FROM " + TABLE_NAME + " WHERE ";
+        sql = "SELECT COUNT(*) as count FROM " + configVariables.TABLE_NAME + " WHERE ";
     }
 
     sql = createQuery(parameters, sql);
     //console.log("generated sql: " + sql);
 
     let id = createID(parameters);
-    id = id + "$count";
+    id = id + configVariables.COUNT_DELIMITER;
     //console.log("generated id: " + id);
 
     return new Promise((resolve, reject) => {
