@@ -4,9 +4,6 @@ const configVariables = require('./config-variables.js');
 
 const cacheManager = require('./query_processing/cacheManager.js');
 
-const redis = require('redis');
-
-const client = redis.createClient(configVariables.REDIS_PORT);
 
 var con = mysql.createPool({
     host: "localhost",
@@ -37,13 +34,6 @@ con.getConnection(function (err, connection) {
     })
 
 });
-
-function extendExpiration(id) {
-
-    client.expire(id, configVariables.DATA_EXPIRATION);
-    console.log("Expiration extended.");
-
-}
 
 // create ID of object by sorting the values by key
 function createID(data) {

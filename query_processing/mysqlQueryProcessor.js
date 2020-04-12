@@ -1,13 +1,8 @@
 const mysql = require('mysql');
 
-const redis = require('redis');
-
 const configVariables = require('../config-variables.js');
 
 const cacheManager = require('./cacheManager.js');
-
-const REDIS_PORT = 6379;
-const client = redis.createClient(REDIS_PORT);
 
 var pool = mysql.createPool({
     host: "127.0.0.1",
@@ -306,13 +301,6 @@ function queryFulltext(searchString, page, res, url) {
     });
 }
 
-function setDataToCache(id, data) {
-
-    client.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
-    console.log("mysqlQueryProcessor: Data set to cache.");
-    //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
-}
-
 function logQuery(hash) {
 
     let sql = `INSERT INTO logs (hash, count, date) VALUES("${hash}", 1, NOW()) ON DUPLICATE KEY UPDATE count=count+1, date=NOW()`
@@ -331,18 +319,6 @@ function logQuery(hash) {
 
 }
 
-function setDataCountToCache(id, data) {
-
-    id = id + configVariables.COUNT_DELIMITER;
-    client.setex(id, configVariables.DATA_EXPIRATION, data);
-    //console.log("mysqlQueryProcessor: Data count set to cache: " + data);
-}
-
-function extendExpiration(id) {
-
-    client.expire(id, configVariables.DATA_EXPIRATION);
-    console.log("mysqlQueryProcessor: Expiration extended.");
-}
 
 // create ID of object by sorting the values by key
 function createID(data, page = 1) {
