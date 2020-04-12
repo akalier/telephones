@@ -8,12 +8,10 @@
 
 <body>
     <h1>Vyhledat</h1>
-    <form method="GET" action="/search-fulltext-results">
-        <label for="searchString">Fulltext search:</label><br>
-        <input type="text" id="searchString" name="searchString" value="Apple"><br>
-        <input class="btn btn-primary" type="submit" value="Search">
-    </form>
     <form method="GET" action="/search-results">
+        <label for="searchString">Fulltextové vyhledávání:</label><br>
+        <input type="text" id="searchString" name="searchString" value=""><br>
+        <br />
         <span>počet výsledků: </span>
         <span id="spanCount">0</span>
         <h3>Vyrobce</h3>

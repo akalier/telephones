@@ -34,6 +34,8 @@ const COUNT_DELIMITER = '$page:';
 const EXPLAIN_DELIMITER = 'EXPLAIN$';
 const FULLTEXT_DELIMITER = 'fulltext$';
 
+const LOGS_MINIMUM_COUNT = 1;
+
 /* END OF CONFIG HERE */
 
 module.exports.count = count;
@@ -51,3 +53,4 @@ module.exports.PAGE_DELIMITER = PAGE_DELIMITER;
 module.exports.COUNT_DELIMITER = COUNT_DELIMITER;
 module.exports.EXPLAIN_DELIMITER = EXPLAIN_DELIMITER;
 module.exports.FULLTEXT_DELIMITER = FULLTEXT_DELIMITER;
+module.exports.LOGS_MINIMUM_COUNT = LOGS_MINIMUM_COUNT;

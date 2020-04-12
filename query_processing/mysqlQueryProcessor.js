@@ -14,11 +14,16 @@ var pool = mysql.createPool({
     connectionLimit: 50,
 });
 
-function createQuery(parameters, sql, page = 1) {
+function createQuery(parameters, sql, page = 1, fulltext = false) {
 
     //no parameters
     if (Object.entries(parameters).length === 0) {
-        sql = sql.substring(0, sql.length - 7);
+        if (fulltext) {
+            sql = sql.substring(0, sql.length - 5);
+        } else {
+            sql = sql.substring(0, sql.length - 7);
+        }
+        
         sql += ` LIMIT ${((page - 1) * configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
 
         //console.log("mysqlQueryProcessor (generated query without params): " + sql);
@@ -90,11 +95,31 @@ function query(parameters, res, url) {
         delete parameters.page;
     }
 
-    let sql = "SELECT * FROM " + configVariables.TABLE_NAME + " WHERE ";
-    sql = createQuery(parameters, sql, page);
+    let searchString = "";
+    if (parameters.searchString != null) {
+        searchString = parameters.searchString;
+        delete parameters.searchString;
+    }
 
-    let id = createID(parameters, page);
+    let sql = "SELECT * FROM " + configVariables.TABLE_NAME + " WHERE ";
+    if (searchString !== "") {
+        sql += `(vyrobce LIKE '%${searchString}%' OR konstrukce LIKE '%${searchString}%' OR OS LIKE '%${searchString}%' OR uzivatelska_pamet LIKE '%${searchString}%' OR fotoaparat_mpix LIKE '%${searchString}%' OR bluetooth LIKE '%${searchString}%') AND `;
+        sql = createQuery(parameters, sql, page, true);
+    } else {
+        sql = createQuery(parameters, sql, page, false);
+    }
+    
+    //console.log(sql);
+
+    let id;
+    if (searchString !== "") {
+        id = createID(parameters, page, searchString);
+    } else {
+        id = createID(parameters, page);
+    }
+    
     logQuery(id);
+    console.log(id);
 
     let cachePromise = cacheManager.searchInCache(id);
 
@@ -321,7 +346,7 @@ function logQuery(hash) {
 
 
 // create ID of object by sorting the values by key
-function createID(data, page = 1) {
+function createID(data, page = 1, searchString = null) {
     var sortedData = sortObj(data);
     //TODO: sort values as well!!!
 
@@ -330,28 +355,20 @@ function createID(data, page = 1) {
     for (var property1 in sortedData) {
 
         id += `${property1}:IN(${sortedData[property1]})`;
-
-        /*if (typeof sortedData[property1] === 'object') {
-            console.log("nn ");
-            let temp = (sortedData[property1]);
-            id += temp[Object.keys(temp)[0]];
-        } else if (Array.isArray(sortedData[property1])) {
-            console.log("array " + array);
-            id += "IN("
-            sortedData[property1].forEach(paramName => {
-                console.log("paramName " + paramName);
-                id += `${paramName},`
-            });
-            id += ")";
-        }
-        else {
-            id += sortedData[property1];
-        }*/
         id += configVariables.DELIMITER;
     }
 
     id = id.substring(0, id.length - 1);
     id = id.replace('%,', '');
+
+    if (searchString) {
+        if (id === "") {
+            id = configVariables.FULLTEXT_DELIMITER + searchString
+        } else {
+            id = configVariables.FULLTEXT_DELIMITER + searchString + configVariables.DELIMITER + id;
+        }   
+    }
+
     if (page) {
         id += configVariables.PAGE_DELIMITER + page;
     }

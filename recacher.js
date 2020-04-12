@@ -28,7 +28,7 @@ con.connect(function (err) {
 
 
 function recacheKeys() {
-    let sql = "SELECT * FROM logs WHERE count > 1";
+    let sql = "SELECT * FROM logs WHERE count >= " + configVariables.LOGS_MINIMUM_COUNT;
 
     return new Promise((resolve, reject) => {
         con.query(sql, function (err, result, fields) {
@@ -37,7 +37,7 @@ function recacheKeys() {
             }
 
             for (var i = 0; i < result.length; i++) {
-                console.log(result[i].hash);
+                //console.log(result[i].hash);
                 reparse(result[i].hash);
             }
 
@@ -50,25 +50,41 @@ function recacheKeys() {
 function reparse(hash) {
 
     let originalHash = hash;
+    console.log("_____________");
+    console.log("hash: " + hash);
 
     let page = 1;
-    if (hash.includes("page")) {
+    if (hash.includes(configVariables.PAGE_DELIMITER)) {
         let split = hash.split(configVariables.PAGE_DELIMITER);
         page = parseInt(split[1]);
         hash = split[0];
+        //console.log(page);
     }
 
-    let sql;
+    let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE `;
 
-    if (hash.includes("fulltext")) {
+    if (hash.includes(configVariables.FULLTEXT_DELIMITER)) {
         let split = hash.split(configVariables.FULLTEXT_DELIMITER);
-        hash = split[1];
-        sql = makeFulltextQuery(hash, page);
+        rest = split[1];
+        fulltext = rest.split(configVariables.DELIMITER)[0];
+
+        sql += makeFulltextQuerySQLPart(fulltext);
+        if (rest.split(configVariables.DELIMITER)[1]) {
+            hash = hash.replace(configVariables.FULLTEXT_DELIMITER, "");
+            hash = hash.replace(fulltext, "");
+            hash = hash.replace(configVariables.DELIMITER, "");
+            sql += " AND ";
+            sql += makeNormalQuery(hash, page);
+        } else {
+            sql += ` LIMIT ${((page-1)*configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
+        }
     } else {
-        sql = makeNormalQuery(hash, page);
+        sql += makeNormalQuery(hash, page);
     }
 
-    return new Promise((resolve, reject) => {
+    console.log("whole query: " + sql);
+
+    /*return new Promise((resolve, reject) => {
         con.query(sql, function (err, result, fields) {
             if (err) {
                 reject(err);
@@ -78,22 +94,21 @@ function reparse(hash) {
             //console.log(result);
             resolve(result);
         });
-    });
+    });*/
 
 }
 
-function makeFulltextQuery(hash, page) {
+function makeFulltextQuerySQLPart(hash) {
 
-    let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE vyrobce LIKE '%${hash}%' OR konstrukce LIKE '%${hash}%' OR OS LIKE '%${hash}%' OR uzivatelska_pamet LIKE '%${hash}%' OR fotoaparat_mpix LIKE '%${hash}%' OR bluetooth LIKE '%${hash}%'`;
-    sql += ` LIMIT ${((page-1)*configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
+    let sql = ` (vyrobce LIKE '%${hash}%' OR konstrukce LIKE '%${hash}%' OR OS LIKE '%${hash}%' OR uzivatelska_pamet LIKE '%${hash}%' OR fotoaparat_mpix LIKE '%${hash}%' OR bluetooth LIKE '%${hash}%')`;
 
-    console.log(sql);
+    //console.log("fulltext part: " + sql);
     return sql;
 }
 
 function makeNormalQuery(hash, page) {
 
-    let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE `;
+    let sql = "";
 
     let split = hash.split(configVariables.DELIMITER);
 
@@ -118,7 +133,7 @@ function makeNormalQuery(hash, page) {
 
     sql = sql.substring(0, sql.length - 4);
     sql += ` LIMIT ${((page-1)*configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
-    console.log(sql);
+    //console.log(sql);
 
     return sql;
 }

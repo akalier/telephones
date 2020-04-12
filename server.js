@@ -57,6 +57,7 @@ app.get('/search-results', function(req, res) {
         bluetooth: req.query.bluetooth,
         fotoaparat_mpix: req.query.fotoaparat_mpix,
         uzivatelska_pamet: req.query.uzivatelska_pamet,
+        searchString: req.query.searchString
     }
 
     Object.keys(parameters).forEach(key => parameters[key] === undefined ? delete parameters[key] : '');

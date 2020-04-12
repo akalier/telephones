@@ -26,10 +26,5 @@ function queryCount(parameters, res, url) {
     database.queryCount(parameters, res, url);
 }
 
-function queryFulltext(parameters, page, res, url) {
-    database.queryFulltext(parameters, page, res, url);
-}
-
 module.exports.query = query;
 module.exports.queryCount = queryCount;
-module.exports.queryFulltext = queryFulltext;
