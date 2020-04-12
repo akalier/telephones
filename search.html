@@ -190,6 +190,8 @@
 
         //initialize session storage for filter
         $(document).ready(function () {
+            sessionStorage.clear();
+            
             var emptyArray = [];
             sessionStorage.setItem("vyrobce", JSON.stringify(emptyArray));
             sessionStorage.setItem("konstrukce", JSON.stringify(emptyArray));
@@ -206,12 +208,7 @@
 
                 updateFilter(e.toElement.name, e.toElement.value);
 
-                //AJAX call here
-
-                //create XHR Object
-
                 var params = makeParams();
-
 
                 sendAJAXrequest(params, document.getElementById("spanCount")).then(() => {
                     recalculateCounts();
