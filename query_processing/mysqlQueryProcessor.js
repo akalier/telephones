@@ -23,7 +23,7 @@ function createQuery(parameters, sql, page = 1, fulltext = false) {
         } else {
             sql = sql.substring(0, sql.length - 7);
         }
-        
+
         sql += ` LIMIT ${((page - 1) * configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
 
         //console.log("mysqlQueryProcessor (generated query without params): " + sql);
@@ -108,7 +108,7 @@ function query(parameters, res, url) {
     } else {
         sql = createQuery(parameters, sql, page, false);
     }
-    
+
     //console.log(sql);
 
     let id;
@@ -117,75 +117,143 @@ function query(parameters, res, url) {
     } else {
         id = createID(parameters, page);
     }
-    
+
     logQuery(id);
     console.log(id);
 
-    let cachePromise = cacheManager.searchInCache(id);
+    //get total count for pagination
+    paginationCount(parameters).then((totalCount) => {
 
-    cachePromise.then((data) => {
-        if (data !== null && data !== 'undefined') {
-            console.log("mysqlQueryProcessor: Data found in redis!");
+        let cachePromise = cacheManager.searchInCache(id);
 
-            //extendExpiration(id);
+        cachePromise.then((data) => {
+            if (data !== null && data !== 'undefined') {
+                console.log("mysqlQueryProcessor: Data found in redis!");
 
-            //console.log("mysqlQueryProcessor (redis data): " + data);
+                //extendExpiration(id);
 
-            if (page > 1) {
-                prevPage = page - 1;
-            } else {
-                prevPage = page;
-            }
+                //console.log("mysqlQueryProcessor (redis data): " + data);
 
-            res.render('results', {
-                title: "Výsledky vyhledávání",
-                telephones: JSON.parse(data),
-                nextPage: page + 1,
-                prevPage: prevPage,
-                url: url
-            });
-            return;
-        } else {
-            console.log("mysqlQueryProcessor: Data NOT found in cache.");
-
-            //get mysql connection
-            pool.getConnection(function (err, con) {
-                if (err) {
-                    console.log("mysqlQueryProcessor: " + err);
-                    throw err;
+                if (page > 1) {
+                    prevPage = page - 1;
+                } else {
+                    prevPage = page;
                 }
 
-                con.query(sql, function (err, result, fields) {
+                if (page * configVariables.ROWS_PER_PAGE > totalCount) {
+                    nextPage = page;
+                } else {
+                    nextPage = page + 1;
+                }
+
+                res.render('results', {
+                    title: "Výsledky vyhledávání",
+                    telephones: JSON.parse(data),
+                    nextPage: nextPage,
+                    prevPage: prevPage,
+                    url: url
+                });
+                return;
+            } else {
+                console.log("mysqlQueryProcessor: Data NOT found in cache.");
+
+                //get mysql connection
+                pool.getConnection(function (err, con) {
                     if (err) {
+                        console.log("mysqlQueryProcessor: " + err);
                         throw err;
                     }
-                    //console.log("mysqlQueryProcessor: Data found in DB.");
-                    //console.log(result);
 
-                    //console.log("mysqlQueryProcessor (mysql data): " + result);
+                    con.query(sql, function (err, result, fields) {
+                        if (err) {
+                            throw err;
+                        }
+                        //console.log("mysqlQueryProcessor: Data found in DB.");
+                        //console.log(result);
 
-                    cacheManager.setDataToCache(id, result);
+                        //console.log("mysqlQueryProcessor (mysql data): " + result);
 
-                    if (page > 1) {
-                        prevPage = page - 1;
-                    } else {
-                        prevPage = page;
-                    }
+                        cacheManager.setDataToCache(id, result);
 
-                    res.render('results', {
-                        title: "Výsledky vyhledávání",
-                        telephones: result,
-                        nextPage: page + 1,
-                        prevPage: prevPage,
-                        url: url
+                        if (page > 1) {
+                            prevPage = page - 1;
+                        } else {
+                            prevPage = page;
+                        }
+
+                        if (page * configVariables.ROWS_PER_PAGE > totalCount) {
+                            nextPage = page;
+                        } else {
+                            nextPage = page + 1;
+                        }
+
+                        res.render('results', {
+                            title: "Výsledky vyhledávání",
+                            telephones: result,
+                            nextPage: nextPage,
+                            prevPage: prevPage,
+                            url: url
+                        });
+                        con.release();
+                        return;
                     });
-                    con.release();
-                    return;
-                });
-            })
-        };
+                })
+            };
+        });
+
     });
 
+
+}
+
+function paginationCount(parameters) {
+
+    let sql = "SELECT COUNT(*) as count FROM " + configVariables.TABLE_NAME + " WHERE ";
+
+    sql = createQuery(parameters, sql);
+
+    let id = createID(parameters);
+    id = id + configVariables.COUNT_DELIMITER;
+    //logQuery(id);
+
+    return new Promise(function (resolve, reject) {
+
+        let cachePromise = cacheManager.searchInCache(id);
+
+        cachePromise.then((data) => {
+
+            if (data !== null && data !== 'undefined') {
+
+                resolve([JSON.parse(data)]);
+
+            } else {
+
+                pool.getConnection(function (err, con) {
+
+                    if (err) {
+                        console.log("mysqlQueryProcessor: " + err);
+                        throw err;
+                    }
+
+                    con.query(sql, function (err, result, fields) {
+                        if (err) {
+                            console.log("mysqlQueryProcessor: " + err);
+                            throw err;
+                        }
+
+                        cacheManager.setDataCountToCache(id, result[0].count);
+
+                        con.release();
+
+                        resolve([JSON.parse(result[0].count)]);
+
+                    });
+                })
+            };
+
+        });
+
+    });
 
 }
 
@@ -331,6 +399,9 @@ function logQuery(hash) {
     let sql = `INSERT INTO logs (hash, count, date) VALUES("${hash}", 1, NOW()) ON DUPLICATE KEY UPDATE count=count+1, date=NOW()`
 
     pool.getConnection(function (err, con) {
+        if (err) {
+            throw err;
+        }
         con.query(sql, function (err, result, fields) {
             if (err) {
                 throw err;
@@ -366,7 +437,7 @@ function createID(data, page = 1, searchString = null) {
             id = configVariables.FULLTEXT_DELIMITER + searchString
         } else {
             id = configVariables.FULLTEXT_DELIMITER + searchString + configVariables.DELIMITER + id;
-        }   
+        }
     }
 
     if (page) {

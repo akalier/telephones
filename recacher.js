@@ -84,7 +84,7 @@ function reparse(hash) {
 
     console.log("whole query: " + sql);
 
-    /*return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         con.query(sql, function (err, result, fields) {
             if (err) {
                 reject(err);
@@ -94,7 +94,7 @@ function reparse(hash) {
             //console.log(result);
             resolve(result);
         });
-    });*/
+    });
 
 }
 
