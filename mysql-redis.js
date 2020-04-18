@@ -1,39 +1,44 @@
 var mysql = require('mysql');
 const config = require('./config.js');
 const configVariables = require('./config-variables.js');
+const databaseAccess = require('./database-access.js');
 
 const cacheManager = require('./query_processing/cacheManager.js');
 
 
-var con = mysql.createPool({
-    host: "localhost",
-    user: "root",
+var pool = mysql.createPool({
+    host: databaseAccess.IP,
+    port: databaseAccess.PORT,
+    user: databaseAccess.USERNAME,
     //TODO: change pwd
-    password: "mysql123",
-    database: "projekt"
+    password: databaseAccess.PASSWORD,
+    database: databaseAccess.DATABASE,
+    connectionLimit: 50,
 });
 
-con.getConnection(function (err, connection) {
+
+pool.getConnection(function (err, connection) {
     if (err) {
         console.log(err);
         throw err;
     }
     console.log("Connected to mySQL!");
 
-    var time = new Date();
+        var time = new Date();
 
-    config.performQueries().then(() => {
-        var newTime = new Date();
-        console.log("Total time: " + (newTime - time) / 1000);
-        console.log("Closing database...");
-        //database.close();
-        connection.release();
-        cacheManager.flushCache();
-    }).catch((err) => {
-        console.log(err);
-    })
-
+        config.performQueries().then(() => {
+            var newTime = new Date();
+            console.log("Total time: " + (newTime - time) / 1000);
+            console.log("Closing database...");
+            //database.close();
+            connection.release();
+            cacheManager.flushCache();
+        }).catch((err) => {
+            console.log(err);
+        })
+        
 });
+
 
 // create ID of object by sorting the values by key
 function createID(data) {
@@ -103,27 +108,45 @@ function requestData(parameters) {
                 } else {
                     //console.log("Data NOT found in redis.");
                     // the particular query
-                    con.query(sql, function (err, result, fields) {
-                        if (err) {
-                            reject(err);
-                        }
-                        //console.log("Data found in DB.");
 
-                        cacheManager.setDataToCache(id, result);
-                        //console.log(result);
-                        resolve(result);
+                    //get mysql connection
+                    pool.getConnection(function (err, con) {
+                        if (err) {
+                            console.log("mysqlQueryProcessor: " + err);
+                            throw err;
+                        }
+                        con.query(sql, function (err, result, fields) {
+                            if (err) {
+                                reject(err);
+                            }
+                            //console.log("Data found in DB.");
+
+                            cacheManager.setDataToCache(id, result);
+                            //console.log(result);
+
+                            con.release();
+                            resolve(result);
+                        });
                     });
                 }
             });
         } else {
 
-            con.query(sql, function (err, result, fields) {
+            pool.getConnection(function (err, con) {
                 if (err) {
-                    reject(err);
+                    console.log("mysqlQueryProcessor: " + err);
+                    throw err;
                 }
-                //console.log("Data found in DB.");
-                //console.log(result);
-                resolve(result);
+                con.query(sql, function (err, result, fields) {
+                    if (err) {
+                        reject(err);
+                    }
+                    //console.log("Data found in DB.");
+                    //console.log(result);
+
+                    con.release();
+                    resolve(result);
+                });
             });
 
         }
@@ -167,28 +190,36 @@ function requestDataCount(parameters) {
                 } else {
                     //console.log("Data NOT found in redis.");
                     // the particular query
-                    con.query(sql, function (err, result, fields) {
+                    pool.getConnection(function (err, con) {
                         if (err) {
-                            reject(err);
+                            console.log("mysqlQueryProcessor: " + err);
+                            throw err;
                         }
-                        //console.log("Data found in DB.");
-
-                        var vysledek;
-                        if (configVariables.explain) {
-                            if (result[0].filtered <= 0) {
-                                result[0].filtered = 0.001;
+                        con.query(sql, function (err, result, fields) {
+                            if (err) {
+                                reject(err);
                             }
-                            //console.log("rows: " + result[0].rows);
-                            //console.log("filtered: " + result[0].filtered);
-                            //console.log((result[0].rows) + " / (100 / " + result[0].filtered + ")");
-                            vysledek = (result[0].rows) / (100 / result[0].filtered);
-                        } else {
-                            vysledek = result[0].count;
-                        }
+                            //console.log("Data found in DB.");
 
-                        //console.log(vysledek);
-                        cacheManager.setDataToCache(id, vysledek);
-                        resolve(vysledek);
+                            var vysledek;
+                            if (configVariables.explain) {
+                                if (result[0].filtered <= 0) {
+                                    result[0].filtered = 0.001;
+                                }
+                                //console.log("rows: " + result[0].rows);
+                                //console.log("filtered: " + result[0].filtered);
+                                //console.log((result[0].rows) + " / (100 / " + result[0].filtered + ")");
+                                vysledek = (result[0].rows) / (100 / result[0].filtered);
+                            } else {
+                                vysledek = result[0].count;
+                            }
+
+                            con.release();
+
+                            //console.log(vysledek);
+                            cacheManager.setDataToCache(id, vysledek);
+                            resolve(vysledek);
+                        });
                     });
                 }
 

@@ -1,16 +1,17 @@
 const mysql = require('mysql');
 
 const configVariables = require('../config-variables.js');
+const databaseAccess = require('../database-access.js');
 
 const cacheManager = require('./cacheManager.js');
 
 var pool = mysql.createPool({
-    host: "127.0.0.1",
-    port: 3306,
-    user: "root",
+    host: databaseAccess.IP,
+    port: databaseAccess.PORT,
+    user: databaseAccess.USERNAME,
     //TODO: change pwd
-    password: "mysql123",
-    database: "projekt",
+    password: databaseAccess.PASSWORD,
+    database: databaseAccess.DATABASE,
     connectionLimit: 50,
 });
 

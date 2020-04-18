@@ -1,16 +1,16 @@
 /* CONFIG HERE */
 
 //mySQL/mongoDB
-const database = "mongoDB";
+const database = "mySQL";
 
-//redis/memcached
+//redis
 const cache = "redis"
 
 // All data (false) vs Count (true)
 const count = true;
 
 // values 0, 50, 80, 100. If count is false, then only 0 or 50
-const percent = 0;
+const percent = 80;
 
 const useCache = true;
 if (useCache) {
