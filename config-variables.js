@@ -7,12 +7,12 @@ const database = "mySQL";
 const cache = "redis"
 
 // All data (false) vs Count (true)
-const count = true;
+const count = false;
 
 // values 0, 50, 80, 100. If count is false, then only 0 or 50
-const percent = 80;
+const percent = 0;
 
-const useCache = true;
+const useCache = false;
 if (useCache) {
     console.log("Config variables: using Redis");
 } else {

@@ -17,15 +17,16 @@ MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 
   var db = database.db("projekt");
 
-  var time = new Date();
-
   cacheManager.flushCache();
+
+  var time = new Date();
 
   config.performQueries(db).then(() => {
     var newTime = new Date();
     console.log("Total time: " + (newTime - time) / 1000);
     console.log("Closing database...");
     database.close();
+    cacheManager.flushCache();
   })
 
 });
@@ -76,7 +77,7 @@ function requestData(db, parameters) {
 
   return new Promise((resolve, reject) => {
 
-    if (configVariables.redis) {
+    if (configVariables.useCache) {
 
       let cachePromise = cacheManager.searchInCache(id);
 

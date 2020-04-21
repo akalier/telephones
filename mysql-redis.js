@@ -24,19 +24,20 @@ pool.getConnection(function (err, connection) {
     }
     console.log("Connected to mySQL!");
 
-        var time = new Date();
+    cacheManager.flushCache();
+    var time = new Date();
 
-        config.performQueries().then(() => {
-            var newTime = new Date();
-            console.log("Total time: " + (newTime - time) / 1000);
-            console.log("Closing database...");
-            //database.close();
-            connection.release();
-            cacheManager.flushCache();
-        }).catch((err) => {
-            console.log(err);
-        })
-        
+    config.performQueries().then(() => {
+        var newTime = new Date();
+        console.log("Total time: " + (newTime - time) / 1000);
+        console.log("Closing database...");
+        //database.close();
+        connection.release();
+        cacheManager.flushCache();
+    }).catch((err) => {
+        console.log(err);
+    })
+
 });
 
 
@@ -100,9 +101,6 @@ function requestData(parameters) {
 
                 if (data !== null && data !== 'undefined') {
                     //console.log("Data found in redis!");
-
-                    //extendExpiration(id);
-
                     //console.log(data);
                     resolve(data);
                 } else {
@@ -119,9 +117,10 @@ function requestData(parameters) {
                             if (err) {
                                 reject(err);
                             }
-                            //console.log("Data found in DB.");
 
                             cacheManager.setDataToCache(id, result);
+
+                            //console.log("Data found in DB.");
                             //console.log(result);
 
                             con.release();
