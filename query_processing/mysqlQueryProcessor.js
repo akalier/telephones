@@ -114,9 +114,9 @@ function query(parameters, res, url) {
 
     let id;
     if (searchString !== "") {
-        id = createID(parameters, page, searchString);
+        id = cacheManager.createID(parameters, page, searchString);
     } else {
-        id = createID(parameters, page);
+        id = cacheManager.createID(parameters, page);
     }
 
     logQuery(id);
@@ -213,7 +213,7 @@ function paginationCount(parameters) {
 
     sql = createQuery(parameters, sql);
 
-    let id = createID(parameters);
+    let id = cacheManager.createID(parameters);
     id = id + configVariables.COUNT_DELIMITER;
     //logQuery(id);
 
@@ -271,7 +271,7 @@ function queryCount(parameters, res, url) {
     }
     sql = createQuery(parameters, sql);
 
-    let id = createID(parameters);
+    let id = cacheManager.createID(parameters);
     id = id + configVariables.COUNT_DELIMITER;
     //logQuery(id);
 
@@ -414,47 +414,6 @@ function logQuery(hash) {
         });
     });
 
-}
-
-
-// create ID of object by sorting the values by key
-function createID(data, page = 1, searchString = null) {
-    var sortedData = sortObj(data);
-    //TODO: sort values as well!!!
-
-    var id = "";
-
-    for (var property1 in sortedData) {
-
-        id += `${property1}:IN(${sortedData[property1]})`;
-        id += configVariables.DELIMITER;
-    }
-
-    id = id.substring(0, id.length - 1);
-    id = id.replace('%,', '');
-
-    if (searchString) {
-        if (id === "") {
-            id = configVariables.FULLTEXT_DELIMITER + searchString
-        } else {
-            id = configVariables.FULLTEXT_DELIMITER + searchString + configVariables.DELIMITER + id;
-        }
-    }
-
-    if (page) {
-        id += configVariables.PAGE_DELIMITER + page;
-    }
-
-    //console.log("mysqlQueryProcessor: generated id: " + id);
-    return id;
-}
-
-// sort object by keys
-function sortObj(obj) {
-    return Object.keys(obj).sort().reduce((accumulator, currentValue) => {
-        accumulator[currentValue] = obj[currentValue];
-        return accumulator;
-    }, {});
 }
 
 module.exports.query = query;

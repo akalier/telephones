@@ -320,9 +320,9 @@
                 var checkbox;
                 var span;
 
-                children.map(item => { // loop over his children using .map() --> see MDN for more
-                    if (item.classList.contains('form-control')) { // we place a test where we determine our choice
-                        checkbox = item; // your code here
+                children.map(item => {
+                    if (item.classList.contains('form-control')) {
+                        checkbox = item;
                     } else if (item.classList.contains('count')) {
                         span = item;
                     }

@@ -122,15 +122,49 @@ function flushMemcached() {
 
 }
 
-/*let id = "15w18";
-let data = [{ a: 1, b: 3, c: "444" }]
+// create ID of object by sorting the values by key
+function createID(data, page = 1, searchString = null) {
+    var sortedData = sortObj(data);
+    //TODO: sort values as well!!!
 
-setDataToCache(id, data);
-searchInCache(id).then((data) => {
-    console.log(data);
-});*/
+    var id = "";
+
+    for (var property1 in sortedData) {
+
+        id += `${property1}:IN(${sortedData[property1]})`;
+        id += configVariables.DELIMITER;
+    }
+
+    id = id.substring(0, id.length - 1);
+    id = id.replace('%,', '');
+
+    // if fulltext search is included
+    if (searchString) {
+        if (id === "") {
+            id = configVariables.FULLTEXT_DELIMITER + searchString
+        } else {
+            id = configVariables.FULLTEXT_DELIMITER + searchString + configVariables.DELIMITER + id;
+        }
+    }
+
+    if (page) {
+        id += configVariables.PAGE_DELIMITER + page;
+    }
+
+    //console.log("mysqlQueryProcessor: generated id: " + id);
+    return id;
+}
+
+// sort object by keys
+function sortObj(obj) {
+    return Object.keys(obj).sort().reduce((accumulator, currentValue) => {
+        accumulator[currentValue] = obj[currentValue];
+        return accumulator;
+    }, {});
+}
 
 module.exports.setDataToCache = setDataToCache;
 module.exports.setDataCountToCache = setDataCountToCache;
 module.exports.searchInCache = searchInCache;
 module.exports.flushCache = flushCache;
+module.exports.createID = createID;
