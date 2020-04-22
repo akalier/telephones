@@ -5,13 +5,6 @@ const configVariables = require('../config-variables.js');
 
 const CLASS_NAME = "Cache Manager";
 
-var memcached = new Memcached();
-/*memcached.connect('localhost:11211', function (err, conn) {
-    if (err) {
-        console.log(conn.server, 'error while memcached connection!!');
-    }
-});*/
-
 const REDIS_PORT = 6379;
 const redisClient = redis.createClient(REDIS_PORT);
 
@@ -19,7 +12,7 @@ function setDataToCache(id, data) {
     if (configVariables.cache === "redis") {
         setDataToRedis(id, data);
     } else {
-        setDataToMemcached(id, data);
+        //for future implementations
     }
 }
 
@@ -27,7 +20,7 @@ function setDataCountToCache(id, data) {
     if (configVariables.cache === "redis") {
         setDataCountToRedis(id, data);
     } else {
-        setDataCountToMemcached(id, data);
+        //for future implementations
     }
 }
 
@@ -35,7 +28,7 @@ function searchInCache(id) {
     if (configVariables.cache === "redis") {
         return searchInRedis(id);
     } else {
-        return searchInMemcached(id);
+        //for future implementations
     }
 }
 
@@ -43,35 +36,21 @@ function flushCache() {
     if (configVariables.cache === "redis") {
         return flushRedis();
     } else {
-        return flushMemcached();
+        //for future implementations
     }
 }
 
 function setDataToRedis(id, data) {
 
     redisClient.setex(id, configVariables.DATA_EXPIRATION, JSON.stringify(data));
-    //console.log("redis: Data set to cache.");
-    //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
-}
-
-function setDataToMemcached(id, data) {
-
-    memcached.set(id, JSON.stringify(data), configVariables.DATA_EXPIRATION);
-    //console.log("memcached: Data set to cache.");
-    //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
+    //console.log(CLASS_NAME + ": " + "Data set to redis cache.");
+    //console.log(CLASS_NAME + ": " + "Data set to redis cache: " + JSON.stringify(data));
 }
 
 function setDataCountToRedis(id, data) {
 
     redisClient.setex(id, configVariables.DATA_EXPIRATION, data);
-    //console.log("cacheManager: Data count set to redis: " + id + " --- " + data);
-}
-
-function setDataCountToMemcached(id, data) {
-
-    memcached.set(id, data, configVariables.DATA_EXPIRATION);
-    console.log("memcached: Data set to cache.");
-    //console.log("mysqlQueryProcessor: Data set to cache: " + JSON.stringify(data));
+    //console.log(CLASS_NAME + ": " + "Data count set to redis: " + id + " --- " + data);
 }
 
 function searchInRedis(id) {
@@ -85,25 +64,7 @@ function searchInRedis(id) {
                 throw err;
             }
 
-            //console.log("cacheManager: Data found in cache: " + id + " --- " + data);
-            resolve(data);
-        });
-    });
-
-}
-
-function searchInMemcached(id) {
-
-    return new Promise(function (resolve, reject) {
-        //first, try to get data from cache
-        memcached.get(id, function (err, data) {
-            if (err) {
-                //error
-                reject("Memcached error");
-                throw err;
-            }
-
-            console.log(data);
+            //console.log(CLASS_NAME + ": " + "Data found in cache: " + id + " - " + data);
             resolve(data);
         });
     });
@@ -113,14 +74,8 @@ function searchInMemcached(id) {
 function flushRedis() {
 
     redisClient.flushdb( function (err, succeeded) {
-        console.log(succeeded); // will be true if successfull
+        console.log(CLASS_NAME + ": " + " flush: " + succeeded); // will be true if successfull
     });
-
-}
-
-function flushMemcached() {
-    
-    //to be implemented
 
 }
 
@@ -153,7 +108,7 @@ function createID(data, page = 1, searchString = null) {
         id += configVariables.PAGE_DELIMITER + page;
     }
 
-    //console.log("mysqlQueryProcessor: generated id: " + id);
+    //console.log(CLASS_NAME + ": " + "generated id: " + id);
     return id;
 }
 

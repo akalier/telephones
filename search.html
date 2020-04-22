@@ -230,7 +230,7 @@
                         text = text.replace(']', '');
 
                         if (substract) {
-                            console.log("var count = " + Number(text) + " - " + Number(document.getElementById("spanCount").innerHTML));
+                            //console.log("var count = " + Number(text) + " - " + Number(document.getElementById("spanCount").innerHTML));
                             var count = Number(text) - Number(document.getElementById("spanCount").innerHTML);
                             if (count < 0) element.innerHTML = `(${count})`;
                             else element.innerHTML = `(+${count})`;
@@ -238,7 +238,6 @@
                             element.innerHTML = text;
                         }
 
-                        //console.log(this.responseText);
                         resolve();
                     } else {
                         reject("Error XHR");

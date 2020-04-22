@@ -29,7 +29,7 @@ function createQuery(parameters, sql, page = 1, fulltext = false) {
 
         sql += ` LIMIT ${((page - 1) * configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
 
-        //console.log("mysqlQueryProcessor (generated query without params): " + sql);
+        //console.log(CLASS_NAME + ": " + "generated query without params: " + sql);
         return sql;
     }
 
@@ -84,13 +84,11 @@ function createQuery(parameters, sql, page = 1, fulltext = false) {
 
     sql += ` LIMIT ${((page - 1) * configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
 
-    //console.log("mysqlQueryProcessor (generated query): " + sql);
+    //console.log(CLASS_NAME + ": " + "generated query: " + sql);
     return sql;
 }
 
 function query(parameters, res, url) {
-
-    //console.log("______________________");
 
     let page = 1;
     if (parameters.page != null) {
@@ -112,8 +110,6 @@ function query(parameters, res, url) {
         sql = createQuery(parameters, sql, page, false);
     }
 
-    //console.log(sql);
-
     let id;
     if (searchString !== "") {
         id = cacheManager.createID(parameters, page, searchString);
@@ -122,7 +118,6 @@ function query(parameters, res, url) {
     }
 
     logQuery(id);
-    console.log(id);
 
     //get total count for pagination
     paginationCount(parameters).then((totalCount) => {
@@ -131,11 +126,7 @@ function query(parameters, res, url) {
 
         cachePromise.then((data) => {
             if (data !== null && data !== 'undefined') {
-                console.log("mysqlQueryProcessor: Data found in redis!");
-
-                //extendExpiration(id);
-
-                //console.log("mysqlQueryProcessor (redis data): " + data);
+                console.log(CLASS_NAME + ": " + "Data found in redis!");
 
                 if (page > 1) {
                     prevPage = page - 1;
@@ -158,12 +149,12 @@ function query(parameters, res, url) {
                 });
                 return;
             } else {
-                console.log("mysqlQueryProcessor: Data NOT found in cache.");
+                console.log(CLASS_NAME + ": " + "Data NOT found in cache.");
 
                 //get mysql connection
                 pool.getConnection(function (err, con) {
                     if (err) {
-                        console.log("mysqlQueryProcessor: " + err);
+                        console.log(CLASS_NAME + ": " + err);
                         throw err;
                     }
 
@@ -171,10 +162,8 @@ function query(parameters, res, url) {
                         if (err) {
                             throw err;
                         }
-                        //console.log("mysqlQueryProcessor: Data found in DB.");
+                        //console.log(CLASS_NAME + ": " + "Data found in DB.");
                         //console.log(result);
-
-                        //console.log("mysqlQueryProcessor (mysql data): " + result);
 
                         cacheManager.setDataToCache(id, result);
 
@@ -234,13 +223,13 @@ function paginationCount(parameters) {
                 pool.getConnection(function (err, con) {
 
                     if (err) {
-                        console.log("mysqlQueryProcessor: " + err);
+                        console.log(CLASS_NAME + ": " + err);
                         throw err;
                     }
 
                     con.query(sql, function (err, result, fields) {
                         if (err) {
-                            console.log("mysqlQueryProcessor: " + err);
+                            console.log(CLASS_NAME + ": " + err);
                             throw err;
                         }
 
@@ -262,8 +251,6 @@ function paginationCount(parameters) {
 
 function queryCount(parameters, res, url) {
 
-    //console.log("______________________");
-
     let sql;
 
     if (configVariables.explain) {
@@ -282,33 +269,29 @@ function queryCount(parameters, res, url) {
     cachePromise.then((data) => {
 
         if (data !== null && data !== 'undefined') {
-            //console.log("mysqlQueryProcessor: Data found in redis!");
+            //console.log(CLASS_NAME + ": " + "Data found in redis!");
 
-            //extendExpiration(id);
-
-            //console.log("mysqlQueryProcessor (redis data): " + data);
+            //console.log(CLASS_NAME + ": " + data);
 
             res.send([JSON.parse(data)]);
             return;
         } else {
-            //console.log("mysqlQueryProcessor: Data NOT found in cache.");
+            //console.log(CLASS_NAME + ": " + "Data NOT found in cache.");
             //get mysql connection
             pool.getConnection(function (err, con) {
 
-                //console.log("mysqlQueryProcessor: connection established.");
-
                 if (err) {
-                    console.log("mysqlQueryProcessor: " + err);
+                    console.log(CLASS_NAME + ": " + err);
                     throw err;
                 }
 
                 con.query(sql, function (err, result, fields) {
                     if (err) {
-                        console.log("mysqlQueryProcessor: " + err);
+                        console.log(CLASS_NAME + ": " + err);
                         throw err;
                     }
-                    //console.log("mysqlQueryProcessor: Data found in DB.");
-                    //console.log("mysqlQueryProcessor (mysql data): " + result[0].count);
+                    //console.log(CLASS_NAME + ": " + "Data found in DB.");
+                    //console.log(CLASS_NAME + ": " + result[0].count);
 
                     cacheManager.setDataCountToCache(id, result[0].count);
                     res.send([JSON.parse(result[0].count)]);
@@ -334,11 +317,9 @@ function queryFulltext(searchString, page, res, url) {
     cachePromise.then((data) => {
 
         if (data !== null && data !== 'undefined') {
-            console.log("mysqlQueryProcessor: Data found in redis!");
+            console.log(CLASS_NAME + ": " + "Data found in redis!");
 
-            //extendExpiration(id);
-
-            //console.log("mysqlQueryProcessor (redis data): " + data);
+            //console.log(CLASS_NAME + ": " + data);
 
             if (page > 1) {
                 prevPage = page - 1;
@@ -355,12 +336,12 @@ function queryFulltext(searchString, page, res, url) {
             });
             return;
         } else {
-            console.log("mysqlQueryProcessor: Data NOT found in cache.");
+            console.log(CLASS_NAME + ": " + "Data NOT found in cache.");
 
             //get mysql connection
             pool.getConnection(function (err, con) {
                 if (err) {
-                    console.log("mysqlQueryProcessor: " + err);
+                    console.log(CLASS_NAME + ": " + err);
                     throw err;
                 }
 
@@ -368,10 +349,10 @@ function queryFulltext(searchString, page, res, url) {
                     if (err) {
                         throw err;
                     }
-                    //console.log("mysqlQueryProcessor: Data found in DB.");
+                    //console.log(CLASS_NAME + ": " + "Data found in DB.");
                     //console.log(result);
 
-                    //console.log("mysqlQueryProcessor (mysql data): " + result);
+                    //console.log(CLASS_NAME + ": " + result);
 
                     cacheManager.setDataToCache(id, result);
 
@@ -409,7 +390,7 @@ function logQuery(hash) {
             if (err) {
                 throw err;
             } else {
-                console.log("mysqlQueryProcessor: Updated log.");
+                console.log(CLASS_NAME + ": " + "Updated log.");
             }
             con.release();
             return;

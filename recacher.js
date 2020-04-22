@@ -15,10 +15,10 @@ var con = mysql.createConnection({
 
 con.connect(function (err) {
     if (err) {
-        console.log(err);
+        console.log(CLASS_NAME + ": " + err);
         throw err;
     }
-    console.log("Connected to mySQL!");
+    console.log(CLASS_NAME + ": " + "Connected to mySQL!");
     recacheKeys();
   
 });
@@ -34,7 +34,7 @@ function recacheKeys() {
             }
 
             for (var i = 0; i < result.length; i++) {
-                //console.log(result[i].hash);
+                //console.log(CLASS_NAME + ": " + result[i].hash);
                 reparse(result[i].hash);
             }
 
@@ -47,15 +47,12 @@ function recacheKeys() {
 function reparse(hash) {
 
     let originalHash = hash;
-    console.log("_____________");
-    console.log("hash: " + hash);
 
     let page = 1;
     if (hash.includes(configVariables.PAGE_DELIMITER)) {
         let split = hash.split(configVariables.PAGE_DELIMITER);
         page = parseInt(split[1]);
         hash = split[0];
-        //console.log(page);
     }
 
     let sql = `SELECT * FROM ${configVariables.TABLE_NAME} WHERE `;
@@ -79,7 +76,7 @@ function reparse(hash) {
         sql += makeNormalQuery(hash, page);
     }
 
-    console.log("whole query: " + sql);
+    console.log(CLASS_NAME + ": " + "whole query: " + sql);
 
     return new Promise((resolve, reject) => {
         con.query(sql, function (err, result, fields) {
@@ -88,7 +85,7 @@ function reparse(hash) {
             }
 
             cacheManager.setDataToRedis(originalHash, result);
-            //console.log(result);
+            //console.log(CLASS_NAME + ": " + result);
             resolve(result);
         });
     });
@@ -99,7 +96,7 @@ function makeFulltextQuerySQLPart(hash) {
 
     let sql = ` (vyrobce LIKE '%${hash}%' OR konstrukce LIKE '%${hash}%' OR OS LIKE '%${hash}%' OR uzivatelska_pamet LIKE '%${hash}%' OR fotoaparat_mpix LIKE '%${hash}%' OR bluetooth LIKE '%${hash}%')`;
 
-    //console.log("fulltext part: " + sql);
+    //console.log(CLASS_NAME + ": " + "fulltext part: " + sql);
     return sql;
 }
 
@@ -130,7 +127,7 @@ function makeNormalQuery(hash, page) {
 
     sql = sql.substring(0, sql.length - 4);
     sql += ` LIMIT ${((page-1)*configVariables.ROWS_PER_PAGE)}, ${configVariables.ROWS_PER_PAGE}`;
-    //console.log(sql);
+    //console.log(CLASS_NAME + ": " + sql);
 
     return sql;
 }

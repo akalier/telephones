@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 app.listen(PORT, () => {
-    console.log(`App listening on port ${PORT}`);
+    console.log(CLASS_NAME + ": " + `App listening on port ${PORT}`);
 })
 
 app.set('views', path.join(__dirname, 'views'));

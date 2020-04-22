@@ -1,3 +1,5 @@
+const CLASS_NAME = "Config Variables";
+
 /* CONFIG HERE */
 
 //mySQL/mongoDB
@@ -14,9 +16,9 @@ const percent = 0;
 
 const useCache = false;
 if (useCache) {
-    console.log("Config variables: using Redis");
+    console.log(CLASS_NAME + ": " + "using Redis");
 } else {
-    console.log("Config variables: NOT using Redis");
+    console.log(CLASS_NAME + ": " + "NOT using Redis");
 }
 
 const explain = false;

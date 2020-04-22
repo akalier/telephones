@@ -15,7 +15,7 @@ const CLASS_NAME = "Mongo Tester";
 MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 
   if (err) throw err;
-  console.log("Connected to mongoDB!");
+  console.log(CLASS_NAME + ": " + "Connected to mongoDB!");
 
   var db = database.db("projekt");
 
@@ -25,20 +25,13 @@ MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 
   config.performQueries(db).then(() => {
     var newTime = new Date();
-    console.log("Total time: " + (newTime - time) / 1000);
-    console.log("Closing database...");
+    console.log(CLASS_NAME + ": " + "Total time: " + (newTime - time) / 1000);
+    console.log(CLASS_NAME + ": " + "Closing database...");
     database.close();
     cacheManager.flushCache();
   })
 
 });
-
-function extendExpiration(id) {
-
-  client.expire(id, configVariables.DATA_EXPIRATION);
-  console.log("Expiration extended.");
-
-}
 
 // create ID of object by sorting the values by key
 function createID(data) {
@@ -75,7 +68,7 @@ function sortObj(obj) {
 function requestData(db, parameters) {
 
   let id = createID(parameters);
-  //console.log('created id: ' + id);
+  //console.log(CLASS_NAME + ": " + "created id: " + id);
 
   return new Promise((resolve, reject) => {
 
@@ -88,24 +81,21 @@ function requestData(db, parameters) {
 
         if (data !== null && data !== 'undefined') {
           //data found in redis
-          //console.log("Data found in redis!");
-
-          //extend expiration
-          //extendExpiration(id);
+          //console.log(CLASS_NAME + ": " + "Data found in redis!");
 
           //console.log(data);
           resolve(data);
         } else {
           //data not found in redis
-          //console.log("Data NOT found in redis.");
+          //console.log(CLASS_NAME + ": " + "Data NOT found in redis.");
           // the particular database query
           db.collection(configVariables.TABLE_NAME).find(parameters).toArray(function (err, result) {
-            //console.log("Requesting DB.");
+            //console.log(CLASS_NAME + ": " + "Requesting DB.");
             if (err) {
               //error
               reject(err);
             }
-            //console.log("Data found in DB.");
+            //console.log(CLASS_NAME + ": " + "Data found in DB.");
             cacheManager.setDataToCache(id, result);
             //console.log(result);
             resolve(result);
@@ -118,6 +108,7 @@ function requestData(db, parameters) {
 
       db.collection(configVariables.TABLE_NAME).find(parameters).toArray(function (err, result) {
         if (err) reject(err);
+        //console.log(CLASS_NAME + ": " + "Data found in DB without looking to cache.");
         //console.log(result);
         resolve(result);
       });
@@ -134,7 +125,7 @@ function requestDataCount(db, parameters) {
   let id = createID(parameters);
 
   id = id + configVariables.COUNT_DELIMITER;
-  //console.log('created id: ' + id);
+  //console.log(CLASS_NAME + ": " + "created id: " + id);
 
   return new Promise((resolve, reject) => {
 
@@ -145,22 +136,19 @@ function requestDataCount(db, parameters) {
       cachePromise.then((data) => {
 
         if (data !== null && data !== 'undefined') {
-          //console.log("Data found in redis!");
-
-          //extend expiration
-          //extendExpiration(id);
+          //console.log(CLASS_NAME + ": " + "Data found in redis!");
 
           //console.log(data);
           resolve(data);
         } else {
-          //console.log("Data NOT found in redis.");
+          //console.log(CLASS_NAME + ": " + "Data NOT found in redis.");
           // the particular query
           db.collection(configVariables.TABLE_NAME).find(parameters).count(function (err, result) {
-            //console.log("Requesting DB.");
+            //console.log(CLASS_NAME + ": " + "Requesting DB.");
             if (err) {
               reject(err);
             }
-            //console.log("Data found in DB.");
+            //console.log(CLASS_NAME + ": " + "Data found in DB.");
             cacheManager.setDataCountToCache(id, result);
             //console.log(result);
             resolve(result);
@@ -170,11 +158,11 @@ function requestDataCount(db, parameters) {
     } else {
 
       db.collection(configVariables.TABLE_NAME).find(parameters).count(function (err, result) {
-        //console.log("Requesting DB.");
+        //console.log(CLASS_NAME + ": " + "Requesting DB.");
         if (err) {
           reject(err);
         }
-        //console.log("Data found in DB.");
+        //console.log(CLASS_NAME + ": " + "Data found in DB without looking to cache.");
         //console.log(result);
         resolve(result);
       });
