@@ -5,6 +5,8 @@ const databaseAccess = require('../database-access.js');
 
 const cacheManager = require('./cacheManager.js');
 
+const CLASS_NAME = "MySQL Query Processor";
+
 var pool = mysql.createPool({
     host: databaseAccess.IP,
     port: databaseAccess.PORT,

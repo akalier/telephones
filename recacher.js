@@ -3,10 +3,7 @@ const configVariables = require('./config-variables.js');
 
 const cacheManager = require('./query_processing/cacheManager.js');
 
-const redis = require('redis');
-
-const REDIS_PORT = 6379;
-const client = redis.createClient(REDIS_PORT);
+const CLASS_NAME = "Recacher";
 
 var con = mysql.createConnection({
     host: "localhost",

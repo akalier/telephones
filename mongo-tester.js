@@ -9,6 +9,8 @@ const cacheManager = require('./query_processing/cacheManager.js');
 
 const client = redis.createClient(configVariables.REDIS_PORT);
 
+const CLASS_NAME = "Mongo Tester";
+
 // Connect to the db
 MongoClient.connect("mongodb://localhost:27017/MyDb", function (err, database) {
 

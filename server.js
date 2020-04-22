@@ -7,6 +7,8 @@ const PORT = 3000;
 
 const app = express();
 
+const CLASS_NAME = "Server";
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 

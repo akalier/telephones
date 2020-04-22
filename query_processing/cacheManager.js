@@ -3,6 +3,8 @@ const Memcached = require('memcached');
 
 const configVariables = require('../config-variables.js');
 
+const CLASS_NAME = "Cache Manager";
+
 var memcached = new Memcached();
 /*memcached.connect('localhost:11211', function (err, conn) {
     if (err) {

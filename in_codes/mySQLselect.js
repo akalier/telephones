@@ -1,4 +1,4 @@
-var mysql_redis = require('../mysql-redis');
+var mysql_redis = require('../mysql-tester');
 
 async function mysqlSelect0() {
   await mysql_redis.requestData({ram : ">12000", model : "LIKE 'A%'", vyrobce : "='Apple'", konstrukce : "='dotykovy'", os : "='Android'"});

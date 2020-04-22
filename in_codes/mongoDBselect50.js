@@ -1,4 +1,4 @@
-var mongo = require('../mongo-redis');
+var mongo = require('../mongo-tester');
 
 async function mongoSelect50(db) {
     await mongo.requestData(db, { 'ram': { $gt: 12000 }, 'model': { $regex: /^A/ }, 'vyrobce': 'Apple', 'konstrukce': 'dotykovy', 'os': 'Android' });
