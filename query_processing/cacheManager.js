@@ -74,7 +74,7 @@ function searchInRedis(id) {
 function flushRedis() {
 
     redisClient.flushdb( function (err, succeeded) {
-        console.log(CLASS_NAME + ": " + " flush: " + succeeded); // will be true if successfull
+        console.log(CLASS_NAME + ": " + "flush " + succeeded); // will be true if successfull
     });
 
 }

@@ -224,27 +224,34 @@ function requestDataCount(parameters) {
 
         } else {
 
-            con.query(sql, function (err, result, fields) {
+            pool.getConnection(function (err, con) {
                 if (err) {
-                    reject(err);
+                    console.log(CLASS_NAME + ": " + err);
+                    throw err;
                 }
-                //console.log(CLASS_NAME + ": " + "Data found in DB.");
-
-                var vysledek;
-                if (configVariables.explain) {
-                    if (result[0].filtered <= 0) {
-                        result[0].filtered = 0.001;
+                con.query(sql, function (err, result, fields) {
+                    if (err) {
+                        reject(err);
                     }
-                    //console.log(CLASS_NAME + ": " + "rows: " + result[0].rows);
-                    //console.log(CLASS_NAME + ": " + "filtered: " + result[0].filtered);
-                    //console.log(CLASS_NAME + ": " + (result[0].rows) + " / (100 / " + result[0].filtered + ")");
-                    vysledek = (result[0].rows) / (100 / result[0].filtered);
-                } else {
-                    vysledek = result[0].count;
-                }
+                    //console.log(CLASS_NAME + ": " + "Data found in DB.");
 
-                //console.log(CLASS_NAME + ": " + vysledek);
-                resolve(vysledek);
+                    var vysledek;
+                    if (configVariables.explain) {
+                        if (result[0].filtered <= 0) {
+                            result[0].filtered = 0.001;
+                        }
+                        //console.log(CLASS_NAME + ": " + "rows: " + result[0].rows);
+                        //console.log(CLASS_NAME + ": " + "filtered: " + result[0].filtered);
+                        //console.log(CLASS_NAME + ": " + (result[0].rows) + " / (100 / " + result[0].filtered + ")");
+                        vysledek = (result[0].rows) / (100 / result[0].filtered);
+                    } else {
+                        vysledek = result[0].count;
+                    }
+
+                    con.release();
+                    //console.log(CLASS_NAME + ": " + vysledek);
+                    resolve(vysledek);
+                });
             });
 
         }
