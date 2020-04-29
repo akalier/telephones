@@ -12,9 +12,9 @@ const cache = "redis"
 const count = true;
 
 // values 0, 50, 80, 100. If count is false, then only 0 or 50
-const percent = 50;
+const percent = 0;
 
-const useCache = false;
+const useCache = true;
 if (useCache) {
     console.log(CLASS_NAME + ": " + "using Redis");
 } else {
