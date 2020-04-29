@@ -1,5 +1,4 @@
 const redis = require('redis');
-const Memcached = require('memcached');
 
 const configVariables = require('../config-variables.js');
 
@@ -82,7 +81,6 @@ function flushRedis() {
 // create ID of object by sorting the values by key
 function createID(data, page = 1, searchString = null) {
     var sortedData = sortObj(data);
-    //TODO: sort values as well!!!
 
     var id = "";
 

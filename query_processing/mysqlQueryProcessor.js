@@ -270,13 +270,13 @@ function queryCount(parameters, res, url) {
 
         if (data !== null && data !== 'undefined') {
             //console.log(CLASS_NAME + ": " + "Data found in redis!");
-
             //console.log(CLASS_NAME + ": " + data);
 
             res.send([JSON.parse(data)]);
             return;
         } else {
             //console.log(CLASS_NAME + ": " + "Data NOT found in cache.");
+
             //get mysql connection
             pool.getConnection(function (err, con) {
 
@@ -350,8 +350,6 @@ function queryFulltext(searchString, page, res, url) {
                         throw err;
                     }
                     //console.log(CLASS_NAME + ": " + "Data found in DB.");
-                    //console.log(result);
-
                     //console.log(CLASS_NAME + ": " + result);
 
                     cacheManager.setDataToCache(id, result);

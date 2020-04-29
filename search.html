@@ -230,7 +230,6 @@
                         text = text.replace(']', '');
 
                         if (substract) {
-                            //console.log("var count = " + Number(text) + " - " + Number(document.getElementById("spanCount").innerHTML));
                             var count = Number(text) - Number(document.getElementById("spanCount").innerHTML);
                             if (count < 0) element.innerHTML = `(${count})`;
                             else element.innerHTML = `(+${count})`;
@@ -263,8 +262,6 @@
             arrays.bluetooth = (JSON.parse(sessionStorage.getItem("bluetooth")));
 
             Object.keys(arrays).forEach(key => {
-                //console.log(key);        // the name of the current key. vyrobce
-                //console.log(myObj[key]); // the value of the current key. [nn, bnb, ef]
 
                 for (var i = 0; i < arrays[key].length; i++) {
                     params += "&" + key + "=" + arrays[key][i];
@@ -310,9 +307,6 @@
 
                 var newParams = params;
 
-
-                //make this async?
-
                 //get value of child checkbox in this div
                 const children = Array.from(div.children);
 
@@ -342,13 +336,7 @@
                     newParams += "&" + checkbox.name + "=" + checkbox.value;
                 }
 
-                //if it is, make AJAX call WITHOUT this value in filter.
-
-                //if it is not, make AJAX call WITH this value in filter.
-                //console.log("recalculate params: " + newParams);
                 sendAJAXrequest(newParams, span, true);
-
-                //set value of child span to the count (e.g. (+1209));
 
             });
         }

@@ -88,6 +88,7 @@ function requestData(db, parameters) {
         } else {
           //data not found in redis
           //console.log(CLASS_NAME + ": " + "Data NOT found in redis.");
+          
           // the particular database query
           db.collection(configVariables.TABLE_NAME).find(parameters).toArray(function (err, result) {
             //console.log(CLASS_NAME + ": " + "Requesting DB.");
