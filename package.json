@@ -17,7 +17,7 @@
     "method-override": "^3.0.0",
     "mongodb": "^3.5.2",
     "mysql": "^2.18.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "pug": "^2.0.4",
     "redis": "^2.8.0",
     "redis-cli": "^1.4.0",
