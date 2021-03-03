@@ -18,7 +18,7 @@
     "mongodb": "^3.5.2",
     "mysql": "^2.18.0",
     "node-fetch": "^2.6.0",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "redis": "^2.8.0",
     "redis-cli": "^1.4.0",
     "redis-server": "^1.2.2"
